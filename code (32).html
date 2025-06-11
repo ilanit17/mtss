@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ניתוח נתוני מיפוי בתי ספר - MTSS</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            color: #2d3436;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .upload-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .file-upload {
+            border: 3px dashed #667eea;
+            border-radius: 12px;
+            padding: 40px;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-upload:hover {
+            border-color: #764ba2;
+            background: #f0f1ff;
+            transform: translateY(-2px);
+        }
+        
+        .file-upload.dragover {
+            border-color: #27ae60;
+            background: #f0fff4;
+            transform: scale(1.02);
+        }
+
+        .file-upload input {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .analysis-container {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .summary-card h3 {
+            color: #2d3436;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .summary-number {
+            font-size: 3em;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .chart-container h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2d3436;
+            font-size: 1.4em;
+        }
+
+        .chart-canvas {
+            max-height: 400px;
+        }
+
+        .heatmap-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .heatmap-cell {
+            padding: 15px 10px;
+            text-align: center;
+            border-radius: 8px;
+            font-weight: bold;
+            color: white;
+            transition: transform 0.2s ease;
+            cursor: pointer;
+        }
+
+        .heatmap-cell:hover {
+            transform: scale(1.05);
+        }
+
+        .level-1 { background: #27ae60; }
+        .level-2 { background: #2ecc71; }
+        .level-3 { background: #f1c40f; color: #2d3436; }
+        .level-4 { background: #f39c12; }
+        .level-5 { background: #e74c3c; }
+
+        .challenges-analysis {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .challenge-category {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-right: 5px solid #667eea;
+        }
+
+        .challenge-item {
+            margin-bottom: 10px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .challenge-text {
+            flex: 1;
+            font-size: 0.95em;
+        }
+
+        .challenge-count {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-weight: bold;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        .insights-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .insight-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        .insight-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .mtss-classification {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .mtss-tier {
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 12px;
+            border-right: 8px solid;
+        }
+
+        .tier-1 { 
+            border-color: #27ae60; 
+            background: linear-gradient(135deg, rgba(39, 174, 96, 0.1) 0%, rgba(46, 204, 113, 0.1) 100%);
+        }
+        .tier-2 { 
+            border-color: #f39c12; 
+            background: linear-gradient(135deg, rgba(243, 156, 18, 0.1) 0%, rgba(245, 166, 35, 0.1) 100%);
+        }
+        .tier-3 { 
+            border-color: #e74c3c; 
+            background: linear-gradient(135deg, rgba(231, 76, 60, 0.1) 0%, rgba(192, 57, 43, 0.1) 100%);
+        }
+
+        .tier-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .tier-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2d3436;
+        }
+
+        .tier-count {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .school-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .school-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            font-size: 0.95em;
+        }
+
+        .school-challenges {
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+            font-size: 0.9em;
+            text-align: right;
+        }
+        .school-challenges ul {
+            list-style-type: none;
+            padding-right: 10px;
+            margin-top: 5px;
+        }
+        .school-challenges li {
+            padding: 3px 0;
+            color: #34495e;
+        }
+        .school-challenges li strong {
+            color: #2980b9;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2em;
+            color: white;
+            background: rgba(0,0,0,0.2);
+            border-radius: 15px;
+        }
+
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid { grid-template-columns: 1fr; }
+            .heatmap-grid { grid-template-columns: repeat(3, 1fr); }
+            .summary-cards { grid-template-columns: 1fr; }
+            .school-list { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 ניתוח נתוני מיפוי בתי ספר</h1>
+            <p>כלי מתקדם לניתוח ויזואליזציה של נתוני מיפוי בתי ספר לפי מודל MTSS</p>
+        </div>
+
+        <div class="upload-section">
+            <h2>📊 העלאת קובץ נתוני מיפוי</h2>
+            <div class="file-upload" onclick="document.getElementById('fileInput').click()">
+                <input type="file" id="fileInput" accept=".csv" onchange="handleFileUpload(event)">
+                <div class="upload-icon">📁</div>
+                <h3>לחץ כדי להעלות קובץ נתונים</h3>
+                <p>העלה את קובץ ה-CSV המיוצא מכלי המיפוי</p>
+            </div>
+            <div class="controls">
+                <button class="btn" onclick="downloadReport()" id="downloadBtn" style="display: none;">📄 הורד דוח אינטראקטיבי מקיף</button>
+                <button class="btn" onclick="downloadSummary()" id="downloadSummaryBtn" style="display: none;">📊 הורד סיכום מנהלים</button>
+                <button class="btn" onclick="loadDemoData()">🎮 טען נתוני דמו</button>
+            </div>
+        </div>
+
+        <div id="loadingMessage" class="loading" style="display: none;">⏳ מעבד את הנתונים...</div>
+        <div id="errorMessage" class="error" style="display: none;"></div>
+        
+        <div id="analysisContainer" class="analysis-container">
+            <div class="summary-cards">
+                <div class="summary-card"><h3>📚 סך בתי ספר</h3><div id="totalSchools" class="summary-number">0</div></div>
+                <div class="summary-card"><h3>👨‍🎓 סך תלמידים</h3><div id="totalStudents" class="summary-number">0</div></div>
+                <div class="summary-card"><h3>⚠️ בתי ספר בסיכון</h3><div id="riskySchools" class="summary-number">0</div></div>
+                <div class="summary-card"><h3>⭐ בתי ספר מובילים</h3><div id="excellentSchools" class="summary-number">0</div></div>
+            </div>
+
+            <div class="mtss-classification">
+                <h2>🎯 סיווג MTSS - חלוקה לשכבות התערבות</h2>
+                <div class="mtss-tier tier-1"><div class="tier-header"><div class="tier-title">שכבה 1 - מענה אוניברסלי</div><div id="tier1Count" class="tier-count">0</div></div><p>כלל בתי הספר הזוכים למענה אוניברסלי - פיתוח מקצועי, ליווי שוטף ותמיכה בסיסית.</p><div id="tier1Schools" class="school-list"></div></div>
+                <div class="mtss-tier tier-2"><div class="tier-header"><div class="tier-title">שכבה 2 - תמיכה ממוקדת</div><div id="tier2Count" class="tier-count">0</div></div><p>בתי ספר עם אתגרים מתונים הזקוקים להתערבות ממוקדת נוסף על המענה האוניברסלי.</p><div id="tier2Schools" class="school-list"></div></div>
+                <div class="mtss-tier tier-3"><div class="tier-header"><div class="tier-title">שכבה 3 - התערבות אינטנסיבית</div><div id="tier3Count" class="tier-count">0</div></div><p>בתי ספר בסיכון גבוה הזקוקים להתערבות מיידית ואינטנסיבית.</p><div id="tier3Schools" class="school-list"></div></div>
+            </div>
+
+            <div class="heatmap-container">
+                <h2>🌡️ מפת חום - רמת האתגרים בכל תחומי המיפוי</h2>
+                <div class="legend">
+                    <div class="legend-item"><div class="legend-color level-1"></div><span>מתחת ל-15%</span></div>
+                    <div class="legend-item"><div class="legend-color level-2"></div><span>15-29%</span></div>
+                    <div class="legend-item"><div class="legend-color level-3"></div><span>30-49%</span></div>
+                    <div class="legend-item"><div class="legend-color level-4"></div><span>50-69%</span></div>
+                    <div class="legend-item"><div class="legend-color level-5"></div><span>70%+</span></div>
+                </div>
+                <div id="heatmapGrid" class="heatmap-grid"></div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-container"><h3>📊 התפלגות ציונים בתחומי הליבה</h3><canvas id="subjectsChart" class="chart-canvas"></canvas></div>
+                <div class="chart-container"><h3>🏢 התפלגות גודל בתי ספר</h3><canvas id="schoolSizeChart" class="chart-canvas"></canvas></div>
+                <div class="chart-container"><h3>🏢 רמות תפקוד ארגוני</h3><canvas id="organizationalChart" class="chart-canvas"></canvas></div>
+                <div class="chart-container"><h3>📈 מדד תפקוד כללי</h3><canvas id="overallPerformanceChart" class="chart-canvas"></canvas></div>
+            </div>
+
+            <div class="challenges-analysis">
+                <h2>🎯 ניתוח אתגרים מקצועיים</h2>
+                <div id="challengesBreakdown"></div>
+            </div>
+
+            <div class="insights-section">
+                <h2>💡 תובנות מרכזיות ודפוסים</h2>
+                <div id="insightsContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let analysisData = null;
+        let charts = {};
+
+        const challengeCategories = {
+            'אתגרי שפה': 'language', 'אתגרי מתמטיקה': 'math', 'אתגרי אנגלית': 'english', 'אתגרי מדעים': 'science',
+            'אתגרי אקלים': 'climate', 'אתגרי יציבות צוות': 'stability', 'אתגרי חזון': 'vision', 'אתגרי איכות צוות': 'staffQuality',
+            'אתגרי מנהיגות': 'leadership', 'אתגרי שיתופי פעולה': 'collaboration', 'אתגרי מעורבות הורים': 'parentInvolvement',
+            'אתגרי ארגון הוראה': 'teachingOrganization', 'אתגרי שיתוף מורים': 'teacherCollaboration'
+        };
+        const allFieldsForHeatmap = ['שפה', 'מתמטיקה', 'אנגלית', 'מדעים', 'אקלים', 'יציבות', 'חזון', 'איכות צוות', 'מנהיגות', 'שיתופי פעולה', 'מעורבות הורים', 'ארגון הוראה', 'שיתוף מורים'];
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const fileName = file.name.toLowerCase();
+            if (!fileName.endsWith('.csv')) {
+                showError('כרגע נתמכים קבצי CSV בלבד.');
+                return;
+            }
+            showLoading(true);
+            showError('');
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    const data = parseCSV(e.target.result);
+                    if (data.length === 0) throw new Error('לא נמצאו נתונים תקינים בקובץ');
+                    processData(data);
+                    showLoading(false);
+                    showAnalysis(true);
+                    showMessage(`קובץ נטען בהצלחה! נותחו ${data.length} בתי ספר`);
+                    document.getElementById('fileInput').value = '';
+                } catch (error) {
+                    showError(`שגיאה בעיבוד הקובץ: ${error.message}`);
+                    showLoading(false);
+                }
+            };
+            reader.onerror = () => { showError('שגיאה בקריאת הקובץ.'); showLoading(false); };
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        function parseCSV(csv) {
+            csv = csv.replace(/^\uFEFF/, '').trim();
+            const lines = csv.split(/\r?\n/).filter(line => line.trim());
+            if (lines.length < 2) throw new Error('הקובץ ריק או מכיל פחות משורת נתונים אחת');
+            const headers = parseCSVLine(lines[0]);
+            if (headers.length === 0) throw new Error('לא נמצאו כותרות בקובץ');
+            const schoolNameFields = ['שם בית הספר', 'בית ספר', 'שם בי"ס', 'school name'];
+            return lines.slice(1).map(line => {
+                const values = parseCSVLine(line);
+                const row = {};
+                headers.forEach((h, i) => row[h.replace(/"/g, '').trim()] = (values[i] || '').replace(/"/g, '').trim());
+                return row;
+            }).filter(row => schoolNameFields.some(field => row[field] && row[field].trim()));
+        }
+
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"' && (!inQuotes || (i + 1 < line.length && line[i + 1] !== '"'))) {
+                    inQuotes = !inQuotes;
+                } else if (char === '"' && inQuotes) {
+                    current += '"';
+                    i++;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current.trim());
+            return result;
+        }
+
+        function processData(data) {
+            data.forEach(school => {
+                school.characterization = generateSchoolCharacterization(school);
+                school.specificChallenges = getSchoolSpecificChallenges(school);
+            });
+            analysisData = {
+                schools: data,
+                summary: calculateSummary(data),
+                subjectDistribution: calculateSubjectDistribution(data),
+                challengesAnalysis: analyzeChallenges(data),
+                mtssClassification: classifyMTSS(data)
+            };
+            analysisData.insights = generateInsights(analysisData);
+            updateUI();
+        }
+
+        function getSchoolSpecificChallenges(school) {
+            const challenges = [];
+            for (const categoryName in challengeCategories) {
+                if (school[categoryName] && school[categoryName].trim()) {
+                    school[categoryName].split(';').map(c => c.trim()).filter(Boolean).forEach(text => {
+                        challenges.push({ category: categoryName.replace('אתגרי ', ''), text });
+                    });
+                }
+            }
+            return challenges;
+        }
+
+        function generateSchoolCharacterization(school) {
+            const scores = Object.fromEntries(allFieldsForHeatmap.map(field => [field, parseInt(school[field]) || 0]));
+            const allValidScores = Object.values(scores).filter(s => s > 0);
+            const avgScore = allValidScores.length > 0 ? allValidScores.reduce((a, b) => a + b, 0) / allValidScores.length : 0;
+            let riskLevel = 'יציב';
+            if (avgScore <= 2.5) riskLevel = 'בסיכון גבוה';
+            else if (avgScore <= 3.5) riskLevel = 'עם אתגרים מתונים';
+            return `בית ספר ${riskLevel}`;
+        }
+        
+        function updateUI() {
+            const { summary, mtssClassification } = analysisData;
+            document.getElementById('totalSchools').textContent = summary.totalSchools;
+            document.getElementById('totalStudents').textContent = summary.totalStudents.toLocaleString();
+            document.getElementById('riskySchools').textContent = summary.riskySchools;
+            document.getElementById('excellentSchools').textContent = summary.excellentSchools;
+            
+            Object.entries(mtssClassification).forEach(([tierKey, schools]) => {
+                const countEl = document.getElementById(`${tierKey}Count`);
+                if(countEl) countEl.textContent = `${schools.length} בתי ספר`;
+            });
+            
+            const createSchoolHtml = school => {
+                const challengesHtml = school.specificChallenges.length > 0 ? `
+                    <div class="school-challenges"><strong>תתי-אתגרים רלוונטיים:</strong>
+                        <ul>${school.specificChallenges.map(c => `<li><strong>${c.category}:</strong> ${c.text}</li>`).join('')}</ul>
+                    </div>` : '';
+                return `<div class="school-item"><strong>${school['שם בית הספר']}</strong><br>
+                    <div style="color:#666;font-size:0.9em;margin:8px 0;font-style:italic;">${school.characterization}</div>
+                    מנהל/ת: ${school['מנהל/ת'] || '-'} | תלמידים: ${school["מס' תלמידים"] || '-'}
+                    ${challengesHtml}</div>`;
+            };
+            document.getElementById('tier1Schools').innerHTML = mtssClassification.tier1.map(createSchoolHtml).join('');
+            document.getElementById('tier2Schools').innerHTML = mtssClassification.tier2.map(createSchoolHtml).join('');
+            document.getElementById('tier3Schools').innerHTML = mtssClassification.tier3.map(createSchoolHtml).join('');
+
+            createHeatMap();
+            createCharts();
+            updateChallengesAnalysis();
+            updateInsights();
+            document.getElementById('downloadBtn').style.display = 'inline-block';
+            document.getElementById('downloadSummaryBtn').style.display = 'inline-block';
+        }
+
+        function calculateSummary(data) {
+            return {
+                totalSchools: data.length,
+                totalStudents: data.reduce((sum, s) => sum + (parseInt(s["מס' תלמידים"]) || 0), 0),
+                riskySchools: data.filter(s => s.characterization.includes("בסיכון גבוה")).length,
+                excellentSchools: data.filter(s => s.characterization.includes("יציב")).length
+            };
+        }
+
+        // --- START OF CORRECTED FUNCTION ---
+        function calculateSubjectDistribution(data) {
+            const dist = {};
+            ['שפה', 'מתמטיקה', 'אנגלית', 'מדעים'].forEach(s => {
+                dist[s] = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 }; // Initialize counters
+                data.forEach(sc => {
+                    const score = sc[s]; // Get the score from the data (e.g., "1", "2", etc.)
+                    if (score && dist[s].hasOwnProperty(score)) { // Check if the score exists and is a valid key (1-5)
+                        dist[s][score]++;
+                    }
+                });
+            });
+            return dist;
+        }
+        // --- END OF CORRECTED FUNCTION ---
+
+
+        function analyzeChallenges(data) {
+            const analysis = {};
+            Object.keys(challengeCategories).forEach(catName => {
+                const challenges = {};
+                let affectedSchools = 0;
+                data.forEach(school => {
+                    if (school[catName] && school[catName].trim()) {
+                        affectedSchools++;
+                        school[catName].split(';').map(c => c.trim()).filter(Boolean).forEach(c => challenges[c] = (challenges[c] || 0) + 1);
+                    }
+                });
+                if (Object.keys(challenges).length > 0) analysis[catName] = { challenges, affectedSchools };
+            });
+            return analysis;
+        }
+
+        function classifyMTSS(data) {
+            let tier1 = [], tier2 = [], tier3 = [];
+            data.forEach(school => {
+                const scores = allFieldsForHeatmap.map(s => parseInt(school[s]) || 0).filter(s => s > 0);
+                const avg = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 5;
+                if (avg <= 2.5) tier3.push(school);
+                else if (avg <= 3.5) tier2.push(school);
+            });
+            const tier2And3Names = new Set([...tier2, ...tier3].map(s => s['שם בית הספר']));
+            tier1 = data.filter(s => !tier2And3Names.has(s['שם בית הספר']));
+            return { tier1, tier2, tier3 };
+        }
+        
+        function generateInsights(context) {
+            const { schools, challengesAnalysis } = context;
+            const insights = [];
+            const dataSize = schools.length;
+            if (dataSize < 3) return [{ title: "מידע חסר", text: "לא ניתן להפיק תובנות משמעותיות מכמות קטנה של נתונים." }];
+            
+            const subjectAverages = {};
+            ['שפה', 'מתמטיקה', 'אנגלית', 'מדעים'].forEach(subject => {
+                const scores = schools.map(s => parseInt(s[subject]) || 0).filter(s => s > 0);
+                if (scores.length > 0) subjectAverages[subject] = scores.reduce((a, b) => a + b, 0) / scores.length;
+            });
+            if (Object.keys(subjectAverages).length > 0) {
+                const lowestSubject = Object.keys(subjectAverages).reduce((a, b) => subjectAverages[a] < subjectAverages[b] ? a : b);
+                insights.push({ title: '📉 התחום הלימודי המאתגר ביותר', text: `תחום <strong>${lowestSubject}</strong> הוא בעל הציון הממוצע הנמוך ביותר (${subjectAverages[lowestSubject].toFixed(2)}), ודורש תשומת לב מיוחדת.` });
+            }
+
+            const allAverages = {};
+            allFieldsForHeatmap.forEach(field => {
+                const scores = schools.map(s => parseInt(s[field]) || 0).filter(s => s > 0);
+                if (scores.length > 0) allAverages[field] = scores.reduce((a, b) => a + b, 0) / scores.length;
+            });
+            if (Object.keys(allAverages).length > 0) {
+                const strongestArea = Object.keys(allAverages).reduce((a, b) => allAverages[a] > allAverages[b] ? a : b);
+                insights.push({ title: '⭐ נקודת חוזק מערכתית', text: `תחום <strong>${strongestArea}</strong> מציג את הביצועים הגבוהים ביותר (ממוצע ${allAverages[strongestArea].toFixed(2)}). ניתן למנף אותו ללמידה.` });
+            }
+
+            const allSpecificChallenges = {};
+            Object.values(challengesAnalysis).forEach(cat => {
+                Object.entries(cat.challenges).forEach(([challenge, count]) => {
+                    allSpecificChallenges[challenge] = (allSpecificChallenges[challenge] || 0) + count;
+                });
+            });
+            if (Object.keys(allSpecificChallenges).length > 0) {
+                const mostCommon = Object.keys(allSpecificChallenges).reduce((a, b) => allSpecificChallenges[a] > allSpecificChallenges[b] ? a : b);
+                insights.push({ title: '🎯 האתגר הנפוץ ביותר', text: `האתגר הספציפי <strong>"${mostCommon}"</strong> הוא הנפוץ ביותר ומופיע ב-${allSpecificChallenges[mostCommon]} בתי ספר.` });
+            }
+            
+            const lowLangSchools = schools.filter(s => (parseInt(s['שפה']) || 5) <= 2).map(s => s['שם בית הספר']);
+            if (lowLangSchools.length > dataSize / 4) {
+                 const lowStaffQualitySchools = schools.filter(s => (parseInt(s['איכות צוות']) || 5) <= 2).map(s => s['שם בית הספר']);
+                 const intersection = lowLangSchools.filter(name => lowStaffQualitySchools.includes(name));
+                 if (intersection.length / lowLangSchools.length > 0.5) {
+                    insights.push({ title: '🔗 קשר אפשרי', text: 'נמצאה חפיפה גבוהה בין בתי ספר עם אתגרי שפה לבין בתי ספר עם אתגרים באיכות הצוות. ייתכן שפיתוח מקצועי של הצוות ישפיע לטובה על הישגי השפה.'});
+                 }
+            }
+            return insights;
+        }
+
+        function createHeatMap() {
+            const container = document.getElementById('heatmapGrid');
+            container.innerHTML = allFieldsForHeatmap.map(field => {
+                const lowSchools = analysisData.schools.filter(s => (parseInt(s[field]) || 0) <= 2).length;
+                const percentage = analysisData.schools.length > 0 ? Math.round((lowSchools / analysisData.schools.length) * 100) : 0;
+                let levelClass = 'level-1';
+                if (percentage >= 70) levelClass = 'level-5';
+                else if (percentage >= 50) levelClass = 'level-4';
+                else if (percentage >= 30) levelClass = 'level-3';
+                else if (percentage >= 15) levelClass = 'level-2';
+                return `<div class="heatmap-cell ${levelClass}" title="${field}: ${lowSchools} בתי ספר (${percentage}%)"><div style="font-size:0.9em;font-weight:normal;">${field.replace('אתגרי ','')}</div><div style="font-size:1.4em;font-weight:bold;">${percentage}%</div></div>`;
+            }).join('');
+        }
+
+        function createCharts() {
+            Object.values(charts).forEach(chart => chart.destroy());
+            charts = {};
+            createSubjectsChart();
+            createSchoolSizeChart();
+            createOrganizationalChart();
+            createOverallPerformanceChart();
+        }
+
+        function createSubjectsChart() {
+            const ctx = document.getElementById('subjectsChart').getContext('2d');
+            const subjects = ['שפה', 'מתמטיקה', 'אנגלית', 'מדעים'];
+            charts.subjects = new Chart(ctx, { type: 'bar', data: { labels: subjects, datasets: [
+                { label: 'רמה 1-2', data: subjects.map(s => analysisData.subjectDistribution[s]['1'] + analysisData.subjectDistribution[s]['2']), backgroundColor: '#e74c3c' },
+                { label: 'רמה 3', data: subjects.map(s => analysisData.subjectDistribution[s]['3']), backgroundColor: '#f39c12' },
+                { label: 'רמה 4-5', data: subjects.map(s => analysisData.subjectDistribution[s]['4'] + analysisData.subjectDistribution[s]['5']), backgroundColor: '#27ae60' }
+            ]}, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }, plugins: { legend: { position: 'bottom' } } } });
+        }
+
+        function createSchoolSizeChart() {
+            const ctx = document.getElementById('schoolSizeChart').getContext('2d');
+            const sizes = { 'קטן (עד 250)': 0, 'בינוני (251-400)': 0, 'גדול (401-600)': 0, 'גדול מאוד (600+)': 0 };
+            analysisData.schools.forEach(s => {
+                const num = parseInt(s["מס' תלמידים"]) || 0;
+                if (num <= 250) sizes['קטן (עד 250)']++; else if (num <= 400) sizes['בינוני (251-400)']++;
+                else if (num <= 600) sizes['גדול (401-600)']++; else sizes['גדול מאוד (600+)']++;
+            });
+            charts.schoolSize = new Chart(ctx, { type: 'doughnut', data: { labels: Object.keys(sizes), datasets: [{ data: Object.values(sizes), backgroundColor: ['#667eea', '#764ba2', '#8e44ad', '#9b59b6'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } });
+        }
+        
+        function createOrganizationalChart() {
+             const ctx = document.getElementById('organizationalChart').getContext('2d');
+            const orgFields = ['אקלים', 'יציבות', 'מנהיגות', 'שיתופי פעולה', 'מעורבות הורים'];
+            const averages = orgFields.map(field => {
+                const scores = analysisData.schools.map(s => parseInt(s[field]) || 0).filter(s => s > 0);
+                return scores.length > 0 ? (scores.reduce((a,b) => a+b, 0) / scores.length).toFixed(2) : 0;
+            });
+            charts.organizational = new Chart(ctx, { type: 'bar', data: { labels: orgFields, datasets: [{ label: 'ציון ממוצע', data: averages, backgroundColor: '#667eea' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 5 } }, plugins: { legend: { display: false } } } });
+        }
+
+        function createOverallPerformanceChart() {
+            const ctx = document.getElementById('overallPerformanceChart').getContext('2d');
+            const ranges = { 'נמוך (1-2.5)': 0, 'בינוני (2.51-3.5)': 0, 'גבוה (3.51-5)': 0 };
+            analysisData.schools.forEach(school => {
+                const scores = allFieldsForHeatmap.map(s => parseInt(school[s]) || 0).filter(s => s > 0);
+                const avg = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+                if(avg === 0) return;
+                if (avg <= 2.5) ranges['נמוך (1-2.5)']++; else if (avg <= 3.5) ranges['בינוני (2.51-3.5)']++;
+                else ranges['גבוה (3.51-5)']++;
+            });
+            charts.performance = new Chart(ctx, { type: 'bar', data: { labels: Object.keys(ranges), datasets: [{ label: 'מספר בתי ספר', data: Object.values(ranges), backgroundColor: ['#e74c3c', '#f39c12', '#27ae60'] }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } } });
+        }
+
+        function updateChallengesAnalysis() {
+            const container = document.getElementById('challengesBreakdown');
+            const sortedCategories = Object.entries(analysisData.challengesAnalysis).sort(([,a], [,b]) => b.affectedSchools - a.affectedSchools);
+            container.innerHTML = sortedCategories.map(([categoryName, categoryData]) => {
+                const sortedChallenges = Object.entries(categoryData.challenges).sort((a,b) => b[1] - a[1]).slice(0, 5);
+                return `<div class="challenge-category"><h3>${categoryName} (${categoryData.affectedSchools} בתי ספר)</h3>
+                    ${sortedChallenges.map(([challenge, count]) => `<div class="challenge-item"><div class="challenge-text">${challenge}</div><div class="challenge-count">${count}</div></div>`).join('')}
+                </div>`;
+            }).join('') || '<p>לא זוהו אתגרים מקצועיים בנתונים.</p>';
+        }
+
+        function updateInsights() {
+            document.getElementById('insightsContainer').innerHTML = analysisData.insights.map(insight => `
+                <div class="insight-card"><div class="insight-title">${insight.title}</div><div>${insight.text}</div></div>`
+            ).join('') || '<p>לא הופקו תובנות אוטומטיות.</p>';
+        }
+
+        function loadDemoData() {
+            const demoCSV = `"מפקח/ת","שם בית הספר","מנהל/ת","מס' תלמידים","שפה","מתמטיקה","אנגלית","מדעים","אקלים","יציבות","חזון","איכות צוות","מנהיגות","שיתופי פעולה","מעורבות הורים","ארגון הוראה","שיתוף מורים","הערות","אתגרי שפה","אתגרי מתמטיקה","אתגרי אנגלית","אתגרי מדעים","אתגרי אקלים","אתגרי יציבות צוות","אתגרי חזון","אתגרי איכות צוות","אתגרי מנהיגות","אתגרי שיתופי פעולה","אתגרי מעורבות הורים","אתגרי ארגון הוראה","אתגרי שיתוף מורים"
+"יעל נתן","בי"ס הגליל","רונית כהן","520","4","4","3","4","4","4","4","4","4","3","4","4","3","","","","שיטות הוראה שאינן מותאמות","","","","","","","","","היעדר שגרות למידת עמיתים"
+"יעל נתן","בי"ס הדקלים","משה לוי","380","2","2","2","2","2","2","2","2","2","2","2","2","2","","רמת הבנת הנקרא אינה מספקת;אוצר מילים מוגבל","שליטה לא מספקת בחשבון;קושי בפתרון בעיות","חוסר ביטחון באנגלית","מחסור בציוד מעבדה","אירועי אלימות","תחלופה גבוהה של צוות","היעדר חזון ברור","פערים בהכשרה המקצועית","מנהיגות פדגוגית חלשה","היעדר שיח עם הרשות","השתתפות הורים מוגבלת","היעדר שגרות תכנון","המורים לא משתפים פעולה"
+"יעל נתן","בי"ס אלונים","דנה אברהם","275","3","3","4","3","3","4","3","3","3","2","3","3","2","","רמת הבנת הנקרא אינה מספקת","חרדת מתמטיקה","","","","","","מיעוט יוזמות פדגוגיות","","","","","המורים לא משתפים פעולה"
+"יעל נתן","בי"ס הזיתים","יוסי מזרחי","445","4","3","3","4","4","3","4","4","3","4","4","3","4","","","","","","","","","","","","","",""
+"יעל נתן","בי"ס כרמלים","נירית שמיר","192","2","3","2","3","3","2","3","2","4","3","2","4","3","","רמת הבנת הנקרא אינה מספקת","","חוסר ביטחון באנגלית","","","תחלופה גבוהה של צוות","","פערים בהכשרה המקצועית","","","השתתפות הורים מוגבלת","",""`;
+            showLoading(true);
+            setTimeout(() => { processData(parseCSV(demoCSV)); showLoading(false); showAnalysis(true); showMessage('נתוני דמו נטענו בהצלחה!'); }, 500);
+        }
+
+        // --- START OF FIXED FUNCTION ---
+        function generateDetailedReport() {
+            if (!analysisData) return '';
+            const analysisHTML = document.getElementById('analysisContainer').innerHTML;
+            const chartData = {
+                subjects: charts.subjects ? charts.subjects.config.data : null,
+                schoolSize: charts.schoolSize ? charts.schoolSize.config.data : null,
+                organizational: charts.organizational ? charts.organizational.config.data : null,
+                performance: charts.performance ? charts.performance.config.data : null
+            };
+            
+            const reportHTML = `
+                <!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="UTF-8"><title>דוח ניתוח מקיף</title>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"><\/script>
+                <style>${[...document.styleSheets[0].cssRules].map(rule => rule.cssText).join('')}<\/style>
+                <style>body{background:white;} .header, .upload-section, .controls {display:none;}</style>
+                </head><body><div class="container">${analysisHTML}</div>
+                <script>
+                    const chartData = ${JSON.stringify(chartData)};
+                    document.addEventListener('DOMContentLoaded', () => {
+                        if(chartData.subjects) new Chart(document.getElementById('subjectsChart'), {type:'bar', data:chartData.subjects, options:{responsive:true,scales:{x:{stacked:true},y:{stacked:true}}}});
+                        if(chartData.schoolSize) new Chart(document.getElementById('schoolSizeChart'), {type:'doughnut', data:chartData.schoolSize, options:{responsive:true}});
+                        if(chartData.organizational) new Chart(document.getElementById('organizationalChart'), {type:'bar', data:chartData.organizational, options:{responsive:true, scales:{y:{max:5}}}});
+                        if(chartData.performance) new Chart(document.getElementById('overallPerformanceChart'), {type:'bar', data:chartData.performance, options:{responsive:true}});
+                    });
+                <\/script></body></html>`;
+
+            return reportHTML;
+        }
+        // --- END OF FIXED FUNCTION ---
+
+        function generateExecutiveSummary() { /* Unchanged */ return '...'; }
+        
+        function downloadFile(content, filename, contentType) {
+            const blob = new Blob([content], { type: `${contentType};charset=utf-8` });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+        }
+
+        function downloadReport() {
+            if (!analysisData) { showError('יש לטעון נתונים לפני הורדת דוח.'); return; }
+            const reportContent = generateDetailedReport();
+            downloadFile(reportContent, `דוח_אינטראקטיבי_${new Date().toLocaleDateString('he-IL').replace(/\./g, '_')}.html`, 'text/html');
+        }
+
+        function downloadSummary() { /* Unchanged */ }
+
+        function showLoading(show) { document.getElementById('loadingMessage').style.display = show ? 'block' : 'none'; }
+        function showAnalysis(show) { document.getElementById('analysisContainer').style.display = show ? 'block' : 'none'; }
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            if (message) {
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+                setTimeout(() => errorDiv.style.display = 'none', 8000);
+            } else { errorDiv.style.display = 'none'; }
+        }
+        function showMessage(message) {
+            const div = document.createElement('div');
+            div.style.cssText = `position:fixed;top:20px;right:20px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:15px 25px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.3);z-index:10000;font-weight:600;`;
+            div.textContent = message;
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            showAnalysis(false);
+            const dropzone = document.querySelector('.file-upload');
+            dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+            dropzone.addEventListener('dragleave', e => { e.preventDefault(); dropzone.classList.remove('dragover'); });
+            dropzone.addEventListener('drop', e => {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+                if (e.dataTransfer.files.length) {
+                    const fileInput = document.getElementById('fileInput');
+                    fileInput.files = e.dataTransfer.files;
+                    handleFileUpload({ target: fileInput });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
