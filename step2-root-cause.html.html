@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ניתוח סיבות שורש - כלי 5 Why's</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            color: #2d3436;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .upload-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .file-upload {
+            border: 3px dashed #667eea;
+            border-radius: 12px;
+            padding: 40px;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-upload:hover {
+            border-color: #764ba2;
+            background: #f0f1ff;
+            transform: translateY(-2px);
+        }
+
+        .file-upload input {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: #636e72;
+            background-image: none;
+        }
+
+        .btn-secondary:hover {
+            background: #2d3436;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .step-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .step-section.active {
+            display: block;
+        }
+
+        .step-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .challenges-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .challenge-card {
+            background: #f8f9fa;
+            padding: 20px;
+            padding-top: 40px; /* Space for badges */
+            border-radius: 12px;
+            border: 2px solid #e9ecef;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .challenge-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .challenge-card.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        }
+
+        .challenge-title {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            color: #2d3436;
+        }
+
+        .challenge-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            color: #636e72;
+        }
+
+        .challenge-description {
+            font-size: 0.95em;
+            line-height: 1.5;
+            color: #2d3436;
+        }
+        
+        .challenge-badges {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .challenge-type-badge, .urgency-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            color: white;
+        }
+        .badge-לימודי { background: #3498db; }
+        .badge-ארגוני { background: #f39c12; }
+        .badge-הון.אנושי { background: #27ae60; }
+        .urgency-high { background: #e74c3c; } /* דחוף */
+        .urgency-medium { background: #f1c40f; color: #2d3436; } /* חשוב */
+        .urgency-low { background: #2ecc71; } /* רגיל */
+
+        .why-analysis {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .why-level {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            border-right: 5px solid #667eea;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .why-level h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .why-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1em;
+            resize: vertical;
+            min-height: 100px;
+            transition: border-color 0.3s ease;
+        }
+
+        .why-input:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+
+        .suggestion-box {
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .suggestion-box label {
+            font-weight: 600;
+            color: #636e72;
+            font-size: 0.9em;
+        }
+
+        .suggestion-select {
+            flex-grow: 1;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            background-color: #f8f9ff;
+            cursor: pointer;
+        }
+
+        .factors-mapping {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .factor-category {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .factor-category h4 {
+            color: #2d3436;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .factor-item {
+            background: #f8f9fa;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-right: 3px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .factor-item:hover {
+            background: #e9ecef;
+            transform: translateX(-2px);
+        }
+
+        .influence-level {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .high-influence { background: #ff6b6b; color: white; }
+        .medium-influence { background: #feca57; color: #2d3436; }
+        .low-influence { background: #48dbfb; color: white; }
+
+        .connections-map {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .connection-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .connection-arrow {
+            margin: 0 15px;
+            font-size: 1.5em;
+            color: #667eea;
+        }
+
+        .summary-section {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .summary-card h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2em;
+            color: #667eea;
+        }
+
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: center;
+            display: none;
+        }
+
+        .success {
+            background: #27ae60;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: center;
+            display: none;
+        }
+
+        .progress-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            gap: 20px;
+        }
+
+        .progress-step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            font-weight: 600;
+        }
+
+        .progress-step.active {
+            background: rgba(255, 255, 255, 0.9);
+            color: #667eea;
+        }
+
+        .progress-step.completed {
+            background: #27ae60;
+            color: white;
+        }
+
+        .file-info {
+            background: #dff0d8;
+            border: 1px solid #d6e9c6;
+            color: #3c763d;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: right;
+        }
+        
+        .filter-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+        .filter-buttons, .sort-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .filter-btn {
+            background: rgba(255,255,255,0.7);
+            border: 2px solid transparent;
+            color: #2d3436;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .filter-btn:hover { background: rgba(255,255,255,0.9); }
+        .filter-btn.active {
+            background: white;
+            border-color: #667eea;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .challenges-grid { grid-template-columns: 1fr; }
+            .factors-mapping { grid-template-columns: 1fr; }
+            .summary-grid { grid-template-columns: 1fr; }
+            .progress-indicator { flex-wrap: wrap; gap: 10px; }
+            .progress-step { padding: 8px 12px; font-size: 0.9em; }
+            .filter-controls { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 ניתוח סיבות שורש</h1>
+            <p>כלי מתקדם לניתוח האתגרים והגורמים העמוקים באמצעות שיטת 5 Why's</p>
+        </div>
+
+        <div class="progress-indicator">
+            <div class="progress-step active" id="step1Progress"><span>1️⃣</span><span>העלאת נתונים</span></div>
+            <div class="progress-step" id="step2Progress"><span>2️⃣</span><span>בחירת אתגר</span></div>
+            <div class="progress-step" id="step3Progress"><span>3️⃣</span><span>ניתוח 5 Why's</span></div>
+            <div class="progress-step" id="step4Progress"><span>4️⃣</span><span>מיפוי גורמים</span></div>
+            <div class="progress-step" id="step5Progress"><span>5️⃣</span><span>סיכום והמלצות</span></div>
+        </div>
+
+        <!-- שלב 1: העלאת נתונים -->
+        <div class="step-section active" id="step1">
+            <div class="upload-section">
+                <h2>📊 העלאת דוח ניתוח מיפוי</h2>
+                <p style="margin-bottom: 20px; color: #636e72;">העלה את דוח המיפוי המקיף מהשלב הקודם כדי לחלץ את האתגרים</p>
+                <div class="file-upload" onclick="document.getElementById('fileInput').click()">
+                    <input type="file" id="fileInput" accept=".html,.htm" onchange="handleFileUpload(event)">
+                    <div class="upload-icon">📄</div>
+                    <h3>לחץ כדי להעלות דוח HTML</h3>
+                    <p style="font-size: 0.9em; color: #666; margin-top: 10px;">
+                        💡 <strong>טיפ:</strong> האפליקציה מתוכננת לנתח את דוח ה-HTML שנוצר בכלי המיפוי
+                    </p>
+                </div>
+                <div id="fileInfo" class="file-info" style="display: none;"></div>
+                <div style="margin-top: 20px;">
+                    <button class="btn btn-secondary" onclick="loadDemoData()">
+                        🎯 השתמש בנתוני דמו להדגמה
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="loadingMessage" class="loading" style="display: none;">
+            ⏳ מעבד את הדוח ומחלץ את האתגרים...
+        </div>
+
+        <div id="errorMessage" class="error"></div>
+        <div id="successMessage" class="success"></div>
+
+        <!-- שלב 2: בחירת אתגר -->
+        <div class="step-section" id="step2">
+            <div class="step-header">
+                <h2>🎯 בחירת האתגר המרכזי לניתוח</h2>
+                <p>האתגרים זוהו וסווגו מהדוח. בחר אתגר כדי להתחיל בניתוח עומק.</p>
+                <div class="filter-controls">
+                    <div class="filter-buttons">
+                        <span>סנן לפי סוג:</span>
+                        <button class="filter-btn active" onclick="filterChallenges('all')">הכל</button>
+                        <button class="filter-btn" onclick="filterChallenges('לימודי')">📚 לימודי</button>
+                        <button class="filter-btn" onclick="filterChallenges('ארגוני')">⚙️ ארגוני</button>
+                        <button class="filter-btn" onclick="filterChallenges('הון אנושי')">👥 הון אנושי</button>
+                    </div>
+                    <div class="sort-controls">
+                        <label for="sortChallenges">מיין לפי:</label>
+                        <select id="sortChallenges" class="suggestion-select" onchange="sortDisplayedChallenges()">
+                            <option value="high-low">דחיפות (גבוה לנמוך)</option>
+                            <option value="low-high">דחיפות (נמוך לגבוה)</option>
+                            <option value="name">שם (א-ת)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div id="challengesGrid" class="challenges-grid"></div>
+            <div class="action-buttons">
+                <button class="btn btn-secondary" onclick="goBack()">→ חזור אחורה</button>
+                <button class="btn" onclick="proceedToAnalysis()" id="proceedBtn" disabled>
+                    המשך לניתוח 5 Why's ←
+                </button>
+            </div>
+        </div>
+
+        <!-- שלב 3: ניתוח 5 Why's -->
+        <div class="step-section" id="step3">
+            <div class="step-header">
+                <h2>🤔 ניתוח 5 Why's</h2>
+                <p id="selectedChallengeTitle">האתגר הנבחר: </p>
+            </div>
+            <div class="why-analysis">
+                <div class="why-level"><h3>🎯 התסמין הנצפה (מה אנו רואים בשטח?)</h3><textarea class="why-input" id="symptom" placeholder="תאר את התסמינים הנצפים בשטח - מה אתה רואה בפועל?"></textarea></div>
+                <div class="why-level"><h3>❓ למה 1: מדוע זה קורה?</h3><textarea class="why-input" id="why1" placeholder="מה הגורמים המיידיים לתסמינים שאתה רואה?"></textarea><div class="suggestion-box"><label for="why1-select">הצעות למילוי:</label><select id="why1-select" class="suggestion-select"><option value="">בחר הצעה להוספה...</option></select></div></div>
+                <div class="why-level"><h3>❓ למה 2: מדוע הגורמים המיידיים קיימים?</h3><textarea class="why-input" id="why2" placeholder="מה גורם לגורמים המיידיים שזיהית?"></textarea><div class="suggestion-box"><label for="why2-select">הצעות למילוי:</label><select id="why2-select" class="suggestion-select"><option value="">בחר הצעה להוספה...</option></select></div></div>
+                <div class="why-level"><h3>❓ למה 3: מדוע הבעיות המערכתיות נמשכות?</h3><textarea class="why-input" id="why3" placeholder="מה הגורמים המערכתיים העמוקים יותר?"></textarea><div class="suggestion-box"><label for="why3-select">הצעות למילוי:</label><select id="why3-select" class="suggestion-select"><option value="">בחר הצעה להוספה...</option></select></div></div>
+                <div class="why-level"><h3>❓ למה 4: מדוע הגורמים המבניים קיימים?</h3><textarea class="why-input" id="why4" placeholder="מה הגורמים המבניים והארגוניים?"></textarea><div class="suggestion-box"><label for="why4-select">הצעות למילוי:</label><select id="why4-select" class="suggestion-select"><option value="">בחר הצעה להוספה...</option></select></div></div>
+                <div class="why-level"><h3>🎯 למה 5: מה הגורמים השורשיים העמוקים ביותר?</h3><textarea class="why-input" id="why5" placeholder="מה גורמי השורש העמוקים ביותר שניתן להשפיע עליהם?"></textarea><div class="suggestion-box"><label for="why5-select">הצעות למילוי:</label><select id="why5-select" class="suggestion-select"><option value="">בחר הצעה להוספה...</option></select></div></div>
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-secondary" onclick="goBack()">→ חזור אחורה</button>
+                <button class="btn" onclick="proceedToMapping()">המשך למיפוי גורמים ←</button>
+            </div>
+        </div>
+
+        <!-- שלב 4: מיפוי גורמים -->
+        <div class="step-section" id="step4">
+            <div class="step-header"><h2>🗺️ מיפוי וסיווג גורמים</h2><p>סווג את הגורמים שזיהית לפי יכולת השפעה וקשרים הדדיים</p></div>
+            <div class="factors-mapping">
+                <div class="factor-category"><h4>🔴 גורמים בעלי השפעה גבוהה</h4><p style="font-size: 0.9em; color: #636e72; margin-bottom: 15px;">גורמים שניתן להשפיע עליהם באופן ישיר ויש להם השפעה משמעותית</p><div id="highInfluenceFactors" class="factors-container"></div></div>
+                <div class="factor-category"><h4>🟡 גורמים בעלי השפעה בינונית</h4><p style="font-size: 0.9em; color: #636e72; margin-bottom: 15px;">גורמים שניתן להשפיע עליהם באופן חלקי או עקיף</p><div id="mediumInfluenceFactors" class="factors-container"></div></div>
+                <div class="factor-category"><h4>🔵 גורמים בעלי השפעה נמוכה</h4><p style="font-size: 0.9em; color: #636e72; margin-bottom: 15px;">גורמים שקשה להשפיע עליהם או שהשפעתם מוגבלת</p><div id="lowInfluenceFactors" class="factors-container"></div></div>
+            </div>
+            <div class="connections-map"><h3>🔗 קשרים בין גורמים</h3><p style="margin-bottom: 15px; color: #636e72;">זיהוי קשרים והשפעות הדדיות בין הגורמים השונים</p><div id="connectionsContainer"></div></div>
+            <div class="action-buttons">
+                <button class="btn btn-secondary" onclick="goBack()">→ חזור אחורה</button>
+                <button class="btn" onclick="generateSummary()">צור סיכום והמלצות ←</button>
+            </div>
+        </div>
+
+        <!-- שלב 5: סיכום והמלצות -->
+        <div class="step-section" id="step5">
+            <div class="step-header"><h2>📋 סיכום ניתוח סיבות השורש</h2><p>תובנות מרכזיות והמלצות לפעולה על בסיס הניתוח</p></div>
+            <div class="summary-section">
+                <h3>🎯 האתגר שנותח</h3><div id="challengeSummary"></div>
+                <div class="summary-grid">
+                    <div class="summary-card"><h4>🔴 גורמי שורש עיקריים</h4><div id="rootCausesSummary"></div></div>
+                    <div class="summary-card"><h4>⚡ גורמים בעדיפות גבוהה</h4><div id="highPriorityFactors"></div></div>
+                    <div class="summary-card"><h4>🔗 קשרים מרכזיים</h4><div id="keyConnections"></div></div>
+                    <div class="summary-card"><h4>💡 המלצות לפעולה</h4><div id="actionRecommendations"></div></div>
+                </div>
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-secondary" onclick="goBack()">→ חזור אחורה</button>
+                <button class="btn" onclick="downloadAnalysis()">📄 הורד דוח ניתוח</button>
+                <button class="btn btn-secondary" onclick="startNewAnalysis()">🔄 התחל ניתוח חדש</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let analysisData = null;
+        let selectedChallenge = null;
+        let currentStep = 1;
+        let whyAnalysis = {};
+        let factorsMapping = { high: [], medium: [], low: [] };
+        let connections = [];
+
+        const KNOWN_CHALLENGES = {
+            'אתגרי שפה': { title: 'אתגרי שפה וקריאה', type: 'לימודי' },
+            'אתגרי מתמטיקה': { title: 'אתגרי מתמטיקה ומיומנויות יסוד', type: 'לימודי' },
+            'אתגרי מדעים': { title: 'אתגרי מדעים וציוד מעבדה', type: 'לימודי' },
+            'אתגרי ארגון הוראה': { title: 'אתגרי ארגון הוראה ותכנון', type: 'ארגוני' },
+            'אתגרי מנהיגות': { title: 'אתגרי מנהיגות פדגוגית', type: 'ארגוני' },
+            'אתגרי אקלים': { title: 'אתגרי אקלים ואינטראקציות', type: 'ארגוני' },
+            'אתגרי יציבות צוות': { title: 'אתגרי יציבות הצוות', type: 'הון אנושי' },
+            'אתגרי איכות צוות': { title: 'אתגרי איכות הצוות המקצועי', type: 'הון אנושי' },
+            'אתגרי שיתוף מורים': { title: 'אתגרי שיתוף פעולה במורים', type: 'הון אנושי' }
+        };
+
+        const whySuggestions = {
+            why1: ["שיטות הוראה אינן מותאמות לשונות התלמידים", "פערים בידע קודם של תלמידים", "חוסר מוטיבציה ועניין של תלמידים", "התנהגות מאתגרת בכיתה", "ציפיות נמוכות של המורים"],
+            why2: ["היעדר הכשרה מקצועית רלוונטית למורים", "חוסר בכלים דידקטיים וטכנולוגיים", "עומס רב על המורים", "היעדר שגרות של למידת עמיתים", "מערכת הערכה לא אפקטיבית"],
+            why3: ["תרבות ארגונית שאינה מעודדת חדשנות", "תוכנית לימודים עמוסה", "היעדר מערכת תמיכה לתלמידים מתקשים", "חוסר אחידות בפרקטיקות הוראה", "קשר רופף עם הורים"],
+            why4: ["מדיניות בית ספרית לא ברורה", "היעדר מנהיגות פדגוגית חזקה", "קבלת החלטות לא מבוססת נתונים", "מבנה מערכת שעות נוקשה", "הקצאת משאבים לא מספקת"],
+            why5: ["תפיסות ואמונות מגבילות של הצוות", "לחצים חיצוניים ממערכת החינוך", "מחסור בתקצוב ייעודי", "פערים חברתיים-כלכליים בקהילה", "חוסר חזון בית ספרי משותף"]
+        };
+        
+        function showLoading(show) { document.getElementById('loadingMessage').style.display = show ? 'block' : 'none'; }
+        function showError(message) {
+            const el = document.getElementById('errorMessage');
+            el.textContent = message;
+            el.style.display = 'block';
+            setTimeout(() => { el.style.display = 'none'; }, 6000);
+        }
+        function showSuccess(message) {
+            const el = document.getElementById('successMessage');
+            el.textContent = message;
+            el.style.display = 'block';
+            setTimeout(() => { el.style.display = 'none'; }, 4000);
+        }
+        function showFileInfo(fileName, count, status) {
+            const el = document.getElementById('fileInfo');
+            const color = status === 'שגיאה' ? '#d32f2f' : status === 'טוען...' ? '#f57c00' : '#388e3c';
+            const icon = status === 'שגיאה' ? '❌' : status === 'טוען...' ? '⏳' : '✅';
+            el.innerHTML = `<div>${icon} <strong>קובץ:</strong> ${fileName} | <strong>סטטוס:</strong> <span style="color:${color};">${status}</span> | <strong>אתגרים:</strong> ${count}</div>`;
+            el.style.display = 'block';
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (!file.name.toLowerCase().endsWith('.html') && !file.name.toLowerCase().endsWith('.htm')) {
+                showError('קובץ לא נתמך. אנא העלה דוח בפורמט HTML שנוצר בכלי המיפוי.');
+                return;
+            }
+            showLoading(true);
+            showFileInfo(file.name, 0, 'טוען...');
+            const reader = new FileReader();
+            reader.onload = e => parseFileContent(e.target.result, file.name);
+            reader.onerror = () => {
+                showError('שגיאה בקריאת הקובץ.');
+                showLoading(false);
+            };
+            reader.readAsText(file);
+        }
+        
+        // --- START OF FIXED FUNCTION ---
+        function parseFileContent(content, fileName) {
+            try {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(content, 'text/html');
+                const challengesMap = new Map();
+
+                // The first app uses 'challenge-item-report' as the wrapper class for each category
+                const challengeElements = doc.querySelectorAll('.challenge-item-report');
+                if (challengeElements.length === 0) {
+                     showError(`לא נמצאו אתגרים במבנה הצפוי בדוח. ודא שהעלית את "דוח הניתוח המקיף" הנכון.`);
+                     showFileInfo(fileName, 0, 'שגיאה');
+                     showLoading(false);
+                     return;
+                }
+
+                challengeElements.forEach(el => {
+                    const h3 = el.querySelector('h3');
+                    if (!h3) return;
+
+                    const text = h3.textContent;
+                    // Regex to capture "אתגרי X (Y בתי ספר...)"
+                    const match = text.match(/(.+?)\s+\((\d+)\s+בתי\s+ספר/i);
+                    if (!match) return;
+
+                    const categoryKey = match[1].trim();
+                    const knownChallenge = KNOWN_CHALLENGES[categoryKey];
+                    if (!knownChallenge) return;
+
+                    const affectedSchools = parseInt(match[2]);
+
+                    // The first app uses 'challenge-detail' for each line item
+                    const details = Array.from(el.querySelectorAll('.challenge-detail')).map(item => {
+                        const itemText = item.textContent.trim();
+                        // Regex to capture "• Challenge Text - X בתי ספר"
+                        const detailMatch = itemText.match(/•\s*(.*?)\s*-\s*(\d+)/);
+                        if (detailMatch) {
+                            return { text: detailMatch[1].trim(), schools: parseInt(detailMatch[2]) };
+                        }
+                        return null;
+                    }).filter(Boolean); // filter(Boolean) removes nulls
+
+                    if (challengesMap.has(knownChallenge.title)) {
+                        const existing = challengesMap.get(knownChallenge.title);
+                        existing.affectedSchools += affectedSchools;
+                        existing.details.push(...details);
+                        // Recalculate priority if needed
+                        existing.priority = Math.max(existing.priority, affectedSchools);
+                    } else {
+                        challengesMap.set(knownChallenge.title, {
+                            category: knownChallenge.title,
+                            challengeType: knownChallenge.type,
+                            affectedSchools: affectedSchools,
+                            details: details.length > 0 ? details : [{text: knownChallenge.title, schools: affectedSchools}],
+                            priority: affectedSchools
+                        });
+                    }
+                });
+
+                const challenges = Array.from(challengesMap.values());
+                if (challenges.length === 0) {
+                    showError(`לא נמצאו אתגרים מוכרים בדוח. ודא שהעלית את דוח הניתוח המקיף הנכון.`);
+                    showFileInfo(fileName, 0, 'שגיאה');
+                    showLoading(false);
+                    return;
+                }
+                
+                analysisData = { challenges };
+                showFileInfo(fileName, challenges.length, 'הושלם');
+                showSuccess(`הקובץ נטען ונותח בהצלחה! זוהו ${challenges.length} אתגרים מרכזיים.`);
+                showLoading(false);
+                setTimeout(() => {
+                    displayChallenges();
+                    moveToStep(2);
+                }, 1000);
+
+            } catch (error) {
+                showError('שגיאה בפענוח הדוח. ודא שהקובץ תקין.');
+                showLoading(false);
+            }
+        }
+        // --- END OF FIXED FUNCTION ---
+
+        function loadDemoData() {
+            showLoading(true);
+            setTimeout(() => {
+                analysisData = {
+                    challenges: [
+                        { category: 'אתגרי שפה וקריאה', affectedSchools: 11, challengeType: 'לימודי', details: [{ text: 'קשיים בשטף קריאה', schools: 11 }, { text: 'רמת הבנת הנקרא אינה מספקת', schools: 8 }], priority: 11 },
+                        { category: 'אתגרי מתמטיקה ומיומנויות יסוד', affectedSchools: 7, challengeType: 'לימודי', details: [{ text: 'שליטה לא מספקת במיומנויות יסוד', schools: 7 }, { text: 'קושי בפתרון בעיות', schools: 6 }], priority: 7 },
+                        { category: 'אתגרי מדעים וציוד מעבדה', affectedSchools: 3, challengeType: 'לימודי', details: [{ text: 'מחסור בציוד מעבדה', schools: 3 }], priority: 3 },
+                        { category: 'אתגרי ארגון הוראה ותכנון', affectedSchools: 9, challengeType: 'ארגוני', details: [{ text: 'פרקטיקות הוראה לא מותאמות', schools: 9 }, { text: 'היעדר שגרות תכנון', schools: 8 }], priority: 9 },
+                        { category: 'אתגרי מנהיגות פדגוגית', affectedSchools: 8, challengeType: 'ארגוני', details: [{ text: 'מנהיגות פדגוגית דורשת חיזוק', schools: 8 }, { text: 'קבלת החלטות לא מבוססת נתונים', schools: 7 }], priority: 8 },
+                        { category: 'אתגרי אקלים ואינטראקציות', affectedSchools: 8, challengeType: 'ארגוני', details: [{ text: 'אינטראקציות לא מיטביות בין תלמידים', schools: 7 }, { text: 'תחושת שייכות נמוכה', schools: 6 }], priority: 8 },
+                        { category: 'אתגרי יציבות הצוות', affectedSchools: 10, challengeType: 'הון אנושי', details: [{ text: 'תחלופה גבוהה של צוות', schools: 10 }, { text: 'שביעות רצון נמוכה', schools: 5 }], priority: 10 },
+                        { category: 'אתגרי איכות הצוות המקצועי', affectedSchools: 10, challengeType: 'הון אנושי', details: [{ text: 'פרקטיקות הוראה לא מותאמות', schools: 10 }, { text: 'פערים בהכשרה המקצועית', schools: 7 }], priority: 10 },
+                        { category: 'אתגרי שיתוף פעולה במורים', affectedSchools: 8, challengeType: 'הון אנושי', details: [{ text: 'המורים אינם פועלים בשיתוף פעולה', schools: 8 }, { text: 'היעדר פתיחות ללמידה', schools: 7 }], priority: 8 }
+                    ]
+                };
+                showSuccess('נתוני הדמו נטענו בהצלחה! 9 אתגרים מובילים זמינים לניתוח.');
+                showLoading(false);
+                setTimeout(() => {
+                    displayChallenges();
+                    moveToStep(2);
+                }, 1000);
+            }, 1500);
+        }
+        
+        function getUrgency(schoolCount) {
+            if (schoolCount >= 9) return { label: 'דחוף', className: 'urgency-high' };
+            if (schoolCount >= 7) return { label: 'חשוב', className: 'urgency-medium' };
+            return { label: 'רגיל', className: 'urgency-low' };
+        }
+
+        function displayChallenges() {
+            const container = document.getElementById('challengesGrid');
+            container.innerHTML = '';
+            if (!analysisData || !analysisData.challenges) return;
+
+            analysisData.challenges.forEach((challenge, index) => {
+                const card = document.createElement('div');
+                card.className = 'challenge-card';
+                card.onclick = () => selectChallenge(card, index);
+                
+                card.dataset.type = challenge.challengeType;
+                card.dataset.priority = challenge.priority;
+                card.dataset.name = challenge.category;
+
+                const urgency = getUrgency(challenge.affectedSchools);
+                const badgeClass = `badge-${challenge.challengeType.replace(' ', '.')}`;
+                const topChallenges = challenge.details.sort((a, b) => b.schools - a.schools).slice(0, 2).map(detail => `• ${detail.text} (${detail.schools} בת"ס)`).join('<br>');
+
+                card.innerHTML = `
+                    <div class="challenge-badges">
+                        <span class="challenge-type-badge ${badgeClass}">${challenge.challengeType === 'הון אנושי' ? '👥 ' : challenge.challengeType === 'ארגוני' ? '⚙️ ' : '📚 '}${challenge.challengeType}</span>
+                        <span class="urgency-badge ${urgency.className}">${urgency.label}</span>
+                    </div>
+                    <div class="challenge-title">${challenge.category}</div>
+                    <div class="challenge-stats">
+                        <span>🏫 <strong>${challenge.affectedSchools}</strong> בתי ספר מושפעים</span>
+                    </div>
+                    <div class="challenge-description">${topChallenges}</div>`;
+                container.appendChild(card);
+            });
+            sortDisplayedChallenges();
+        }
+
+        function selectChallenge(cardElement, index) {
+            document.querySelectorAll('.challenge-card').forEach(card => card.classList.remove('selected'));
+            cardElement.classList.add('selected');
+            selectedChallenge = analysisData.challenges[index];
+            document.getElementById('proceedBtn').disabled = false;
+        }
+        
+        function filterChallenges(type) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            const cards = document.querySelectorAll('.challenge-card');
+            cards.forEach(card => {
+                card.style.display = (type === 'all' || card.dataset.type === type) ? 'block' : 'none';
+            });
+        }
+
+        function sortDisplayedChallenges() {
+            const sortBy = document.getElementById('sortChallenges').value;
+            const grid = document.getElementById('challengesGrid');
+            const cards = Array.from(grid.children);
+            cards.sort((a, b) => {
+                if (sortBy === 'high-low') return b.dataset.priority - a.dataset.priority;
+                if (sortBy === 'low-high') return a.dataset.priority - b.dataset.priority;
+                if (sortBy === 'name') return a.dataset.name.localeCompare(b.dataset.name, 'he');
+                return 0;
+            });
+            cards.forEach(card => grid.appendChild(card));
+        }
+
+        function proceedToAnalysis() {
+            if (!selectedChallenge) return;
+            document.getElementById('selectedChallengeTitle').textContent = `האתגר הנבחר: ${selectedChallenge.category}`;
+            const topChallenge = selectedChallenge.details.sort((a, b) => b.schools - a.schools)[0];
+            document.getElementById('symptom').value = `בשטח אנו צופים ב: ${topChallenge.text}. התופעה משפיעה על ${selectedChallenge.affectedSchools} בתי ספר.`;
+            moveToStep(3);
+        }
+
+        function proceedToMapping() {
+            whyAnalysis = {
+                symptom: document.getElementById('symptom').value,
+                why1: document.getElementById('why1').value, why2: document.getElementById('why2').value,
+                why3: document.getElementById('why3').value, why4: document.getElementById('why4').value,
+                why5: document.getElementById('why5').value
+            };
+            if (Object.values(whyAnalysis).some(val => !val.trim())) {
+                showError('אנא מלא את כל שדות הניתוח לפני המשך');
+                return;
+            }
+            generateFactorsFromAnalysis();
+            displayFactorsMapping();
+            moveToStep(4);
+        }
+
+        function generateFactorsFromAnalysis() {
+            const allFactors = [];
+            Object.keys(whyAnalysis).forEach(level => {
+                if (whyAnalysis[level] && whyAnalysis[level].trim()) {
+                    const factors = whyAnalysis[level].split(/[\n•,;.]/).map(f => f.trim()).filter(f => f.length > 5);
+                    factors.forEach(factor => allFactors.push({ text: factor, level: level, influence: determineInfluenceLevel(level) }));
+                }
+            });
+            factorsMapping = {
+                high: allFactors.filter(f => f.influence === 'high'),
+                medium: allFactors.filter(f => f.influence === 'medium'),
+                low: allFactors.filter(f => f.influence === 'low')
+            };
+            generateBasicConnections();
+        }
+
+        function determineInfluenceLevel(level) {
+            if (['why1', 'why2'].includes(level)) return 'high';
+            if (['why3', 'why4'].includes(level)) return 'medium';
+            return 'low';
+        }
+
+        function displayFactorsMapping() {
+            displayFactorsInCategory('highInfluenceFactors', factorsMapping.high, 'high');
+            displayFactorsInCategory('mediumInfluenceFactors', factorsMapping.medium, 'medium');
+            displayFactorsInCategory('lowInfluenceFactors', factorsMapping.low, 'low');
+            displayConnections();
+        }
+
+        function displayFactorsInCategory(containerId, factors, influence) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = factors.length > 0
+                ? factors.map(f => `<div class="factor-item"><span class="influence-level ${influence}-influence">${influence === 'high' ? 'גבוהה' : influence === 'medium' ? 'בינונית' : 'נמוכה'}</span>${f.text}</div>`).join('')
+                : '<p style="color:#636e72;font-style:italic;">לא נמצאו גורמים בקטגוריה זו</p>';
+        }
+
+        function generateBasicConnections() {
+            connections = [];
+            if (whyAnalysis.why5 && whyAnalysis.why4) connections.push({ from: 'גורמי שורש עמוקים', to: 'גורמים מבניים', description: 'הגורמים השורשיים יוצרים בעיות מבניות' });
+            if (whyAnalysis.why4 && whyAnalysis.why3) connections.push({ from: 'גורמים מבניים', to: 'בעיות מערכתיות', description: 'הבעיות המבניות גורמות לקשיים מערכתיים' });
+            if (whyAnalysis.why3 && whyAnalysis.why2) connections.push({ from: 'בעיות מערכתיות', to: 'גורמים מיידיים', description: 'הקשיים המערכתיים מתבטאים בגורמים מיידיים' });
+            if (whyAnalysis.why2 && whyAnalysis.why1) connections.push({ from: 'גורמים מיידיים', to: 'תסמינים נצפים', description: 'הגורמים המיידיים יוצרים את התסמינים' });
+        }
+
+        function displayConnections() {
+            const container = document.getElementById('connectionsContainer');
+            container.innerHTML = connections.length > 0
+                ? connections.map(c => `<div class="connection-item"><span>${c.from}</span><span class="connection-arrow">→</span><span>${c.to}</span><div style="font-size:0.9em;color:#636e72;margin-top:5px;">${c.description}</div></div>`).join('')
+                : '<p style="color:#636e72;font-style:italic;">לא זוהו קשרים</p>';
+        }
+
+        function generateSummary() {
+            const summary = {
+                challenge: selectedChallenge.category,
+                rootCauses: whyAnalysis.why5 ? whyAnalysis.why5.split(/[\n•,;.]/).filter(c => c.trim().length > 5) : [],
+                highPriorityFactors: factorsMapping.high.map(f => f.text),
+                keyConnections: connections.map(c => `${c.from} → ${c.to}`),
+                recommendations: generateRecommendations()
+            };
+            displaySummary(summary);
+            moveToStep(5);
+        }
+
+        function generateRecommendations() {
+            const recs = [];
+            if (factorsMapping.high.length > 0) recs.push('התמקד בגורמים בעלי השפעה גבוהה כעדיפות ראשונה.', 'פתח תוכנית פעולה ספציפית לכל גורם בעדיפות גבוהה.');
+            if (factorsMapping.medium.length > 0) recs.push('צור תוכנית ביניים לטיפול בגורמים בעלי השפעה בינונית.');
+            const cat = selectedChallenge.category.toLowerCase();
+            if (cat.includes('שפה') || cat.includes('קריאה')) recs.push('שקול הקמת מרכז כתיבה וקריאה בית ספרי.', 'פתח תוכנית קריאה מותאמת אישית לתלמידים.');
+            else if (cat.includes('מתמטיקה') || cat.includes('מדע')) recs.push('הטמע שיטות הוראה חזותיות ומניפולטיביות.', 'פתח תוכנית להפחתת חרדת מתמטיקה.');
+            else if (cat.includes('מנהיגות')) recs.push('קיים תוכנית פיתוח מנהיגות לצוות ההנהלה.', 'הטמע מערכת קבלת החלטות מבוססת נתונים.');
+            else recs.push('פתח תוכנית התערבות מותאמת לאתגר הספציפי.');
+            recs.push('קבע מדדי הצלחה ברורים ומדידים.', 'בצע הערכה תקופתית של יעילות ההתערבות.');
+            return recs;
+        }
+
+        function displaySummary(summary) {
+            const renderList = (items) => items.length > 0 ? items.map(item => `• ${item.trim()}`).join('<br>') : '<p style="color:#636e72;font-style:italic;">לא זוהו פריטים</p>';
+            document.getElementById('challengeSummary').innerHTML = `<h4 style="color:#667eea;">${summary.challenge}</h4>`;
+            document.getElementById('rootCausesSummary').innerHTML = renderList(summary.rootCauses);
+            document.getElementById('highPriorityFactors').innerHTML = renderList(summary.highPriorityFactors);
+            document.getElementById('keyConnections').innerHTML = renderList(summary.keyConnections);
+            document.getElementById('actionRecommendations').innerHTML = renderList(summary.recommendations);
+        }
+        
+        function downloadFile(content, filename, contentType) {
+            const blob = new Blob([content], { type: `${contentType};charset=utf-8` });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+            showSuccess('הדוח הורד בהצלחה!');
+        }
+
+        function downloadAnalysis() {
+            const whyText = (field) => (whyAnalysis[field] || 'לא צוין').replace(/\n/g, '<br>');
+            const report = `<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="UTF-8"><title>דוח ניתוח סיבות שורש</title><style>body{font-family:'Segoe UI',sans-serif;direction:rtl;margin:20px;background:#f8f9fa;line-height:1.6;}.header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:30px;border-radius:10px;text-align:center;margin-bottom:30px;}.section{background:white;padding:25px;margin-bottom:25px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1);}.why-level{margin-bottom:20px;padding:15px;background:#f8f9fa;border-radius:8px;border-right:4px solid #667eea;}h1,h2,h3{color:#2d3436;}</style></head><body><div class="header"><h1>🔍 דוח ניתוח סיבות שורש</h1><h2>${selectedChallenge.category}</h2></div><div class="section"><h2>🎯 האתגר</h2><p><strong>קטגוריה:</strong> ${selectedChallenge.category}</p><p><strong>היקף:</strong> ${selectedChallenge.affectedSchools} בת"ס</p></div><div class="section"><h2>🤔 ניתוח 5 Why's</h2><div class="why-level"><h3>🎯 התסמין</h3><p>${whyText('symptom')}</p></div><div class="why-level"><h3>❓ למה 1</h3><p>${whyText('why1')}</p></div><div class="why-level"><h3>❓ למה 2</h3><p>${whyText('why2')}</p></div><div class="why-level"><h3>❓ למה 3</h3><p>${whyText('why3')}</p></div><div class="why-level"><h3>❓ למה 4</h3><p>${whyText('why4')}</p></div><div class="why-level"><h3>🎯 למה 5 (שורש)</h3><p>${whyText('why5')}</p></div></div><div class="section"><h2>🗺️ מיפוי גורמים</h2><h3>🔴 השפעה גבוהה</h3><ul>${factorsMapping.high.map(f=>`<li>${f.text}</li>`).join('')}</ul><h3>🟡 השפעה בינונית</h3><ul>${factorsMapping.medium.map(f=>`<li>${f.text}</li>`).join('')}</ul><h3>🔵 השפעה נמוכה</h3><ul>${factorsMapping.low.map(f=>`<li>${f.text}</li>`).join('')}</ul></div><div class="section"><h2>💡 המלצות</h2><ul>${generateRecommendations().map(r=>`<li>${r}</li>`).join('')}</ul></div><footer><p style="text-align:center;color:#666;">הופק בתאריך ${new Date().toLocaleDateString('he-IL')}</p></footer></body></html>`;
+            const fileName = `ניתוח_שורש_${selectedChallenge.category.replace(/\s+/g, '_')}.html`;
+            downloadFile(report, fileName, 'text/html');
+        }
+
+        function startNewAnalysis() {
+            Object.assign(window, { analysisData: null, selectedChallenge: null, whyAnalysis: {}, factorsMapping: { high:[], medium:[], low:[] }, connections: [] });
+            document.getElementById('proceedBtn').disabled = true;
+            document.getElementById('fileInput').value = '';
+            document.getElementById('fileInfo').style.display = 'none';
+            Object.keys(whySuggestions).forEach(key => document.getElementById(key).value = '');
+            document.getElementById('symptom').value = '';
+            moveToStep(1);
+            showSuccess('הניתוח אופס. ניתן להתחיל מחדש.');
+        }
+        
+        function goBack() { if (currentStep > 1) moveToStep(currentStep - 1); }
+        function moveToStep(step) {
+            document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
+            document.getElementById(`step${step}`).classList.add('active');
+            updateProgressIndicator(step);
+            currentStep = step;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        function updateProgressIndicator(step) {
+            for (let i = 1; i <= 5; i++) {
+                const el = document.getElementById(`step${i}Progress`);
+                el.classList.remove('active', 'completed');
+                if (i < step) el.classList.add('completed');
+                else if (i === step) el.classList.add('active');
+            }
+        }
+        function populateSuggestionDropdowns() {
+            Object.keys(whySuggestions).forEach(key => {
+                const select = document.getElementById(`${key}-select`);
+                if(select) whySuggestions[key].forEach(s => select.add(new Option(s, s)));
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateProgressIndicator(1);
+            populateSuggestionDropdowns();
+            document.body.addEventListener('change', e => {
+                if (e.target.classList.contains('suggestion-select')) {
+                    const sel = e.target;
+                    if (!sel.value) return;
+                    const area = document.getElementById(sel.id.replace('-select', ''));
+                    area.value += (area.value ? '\n\n' : '') + `• ${sel.value}`;
+                    sel.selectedIndex = 0;
+                    area.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            });
+        });
+    </script>
+</body>
+</html>

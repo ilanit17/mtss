@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מגדיר הסוגיות המרכזיות</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            min-height: 100vh;
+            padding: 20px;
+            direction: rtl;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            color: #2c3e50;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-secondary { background: #7f8c8d; }
+        .btn-secondary:hover { background: #34495e; }
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .step-section {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: none;
+        }
+        .step-section.active { display: block; }
+        .step-header {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .file-upload {
+            border: 3px dashed #3498db;
+            border-radius: 12px;
+            padding: 40px;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+        .file-upload:hover { border-color: #2980b9; background: #f0f1ff; }
+        .file-upload input { position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; }
+        .upload-icon { font-size: 4em; color: #3498db; margin-bottom: 15px; }
+        .data-summary { background: #ecf0f1; border-right: 5px solid #27ae60; padding: 20px; margin-top: 20px; border-radius: 8px; }
+        .issue-card-container { display: grid; grid-template-columns: 1fr; gap: 25px; }
+        .issue-card { background: #f8f9fa; border: 2px solid #e9ecef; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; }
+        .issue-card h4 { color: #2980b9; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 15px; }
+        .issue-question { font-size: 1.1em; line-height: 1.6; flex-grow: 1; }
+        .rationale-box {
+            background-color: #ecf0f1;
+            border-right: 4px solid #3498db;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.95em;
+        }
+        .rationale-box p { margin-bottom: 8px; }
+        .level-badge {
+            background-color: #3498db;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        .issue-editor { background: #f8f9fa; padding: 20px; border-radius: 12px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #34495e; }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+        .form-group input:focus, .form-group textarea:focus { border-color: #3498db; outline: none; }
+        .final-issue-display { background: #eaf5ff; padding: 20px; border-radius: 10px; border: 2px dashed #3498db; margin-top: 20px; font-size: 1.1em; line-height: 1.6; }
+        .final-report { border: 1px solid #ccc; padding: 20px; border-radius: 8px; background: white; }
+        .final-report h3 { color: #2980b9; }
+        .error, .success, .loading { padding: 15px; border-radius: 8px; margin: 10px 0; text-align: center; display: none; }
+        .error { background: #e74c3c; color: white; }
+        .success { background: #2ecc71; color: white; }
+        .loading { color: #3498db; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📜 מגדיר הסוגיות המרכזיות</h1>
+            <p>שלב 4: הפיכת ניתוח סיבות שורש לסוגייה מרכזית לפעולה</p>
+        </div>
+
+        <div id="loadingMessage" class="loading"></div>
+        <div id="errorMessage" class="error"></div>
+        <div id="successMessage" class="success"></div>
+
+        <!-- שלב 1: העלאת דוח -->
+        <div class="step-section active" id="step1">
+            <div class="step-header">
+                <h2>שלב 1: העלאת דוח ניתוח סיבות שורש</h2>
+            </div>
+            <div class="file-upload" onclick="document.getElementById('fileInput').click()">
+                <input type="file" id="fileInput" accept=".html,.htm" onchange="handleFileUpload(event)">
+                <div class="upload-icon">📤</div>
+                <h3>לחץ להעלאת דוח ניתוח סיבות שורש</h3>
+                <p>האפליקציה תחפש את האתגר, התסמין וגורמי השורש שזוהו.</p>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="loadDemoData()">השתמש בנתוני דמו להדגמה</button>
+            </div>
+            <div id="dataSummary" class="data-summary" style="display: none;"></div>
+            <div class="action-buttons">
+                <button class="btn" id="proceedToStep2" onclick="moveToStep(2)" disabled>המשך לניסוח סוגיות →</button>
+            </div>
+        </div>
+
+        <!-- שלב 2: ניסוח סוגיות -->
+        <div class="step-section" id="step2">
+            <div class="step-header">
+                <h2>שלב 2: בחירת סוגייה מרכזית</h2>
+                <p>בהתבסס על גורמי השורש שזוהו, הנה מספר כיוונים אפשריים. בחר את הסוגייה הרלוונטית ביותר.</p>
+            </div>
+            <div id="issueCardContainer" class="issue-card-container">
+                <!-- כרטיסיות הסוגיות יוצגו כאן -->
+            </div>
+            <div class="action-buttons">
+                 <button class="btn btn-secondary" onclick="goBack()">→ חזור אחורה</button>
+            </div>
+        </div>
+
+        <!-- שלב 3: התאמת הסוגייה -->
+        <div class="step-section" id="step3">
+            <div class="step-header">
+                <h2>שלב 3: הגדרה והתאמה אישית של הסוגייה</h2>
+                <p>דייק את ניסוח הסוגייה שנבחרה כך שתתאים להקשר ולמטרות שלך.</p>
+            </div>
+            <div class="issue-editor">
+                <div class="form-group">
+                    <label for="editAction">כיצד ניתן ל... (הפעולה)</label>
+                    <input type="text" id="editAction" oninput="updateFinalIssue()">
+                </div>
+                <div class="form-group">
+                    <label for="editSubject">את... (הסוגייה)</label>
+                    <input type="text" id="editSubject" oninput="updateFinalIssue()">
+                </div>
+                <div class="form-group">
+                    <label for="editContext">ב... (ההקשר)</label>
+                    <input type="text" id="editContext" oninput="updateFinalIssue()">
+                </div>
+                <div class="form-group">
+                    <label for="editResult">על מנת ל... (התוצאה הרצויה)</label>
+                    <input type="text" id="editResult" oninput="updateFinalIssue()">
+                </div>
+
+                <div class="final-issue-display">
+                    <strong>הסוגייה המרכזית:</strong>
+                    <p id="finalIssueText"></p>
+                </div>
+
+                 <div class="form-group" style="margin-top: 20px;">
+                    <label for="editVision">חזון אסטרטגי</label>
+                    <textarea id="editVision" rows="3" placeholder="תאר במשפט את החזון ארוך הטווח לפתרון הסוגייה"></textarea>
+                </div>
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-secondary" onclick="goBack()">→ חזור אחורה</button>
+                <button class="btn" onclick="moveToStep(4)">שמור והמשך לסיכום →</button>
+            </div>
+        </div>
+
+        <!-- שלב 4: הפקת מסמך -->
+        <div class="step-section" id="step4">
+            <div class="step-header">
+                <h2>שלב 4: סיכום והפקת מסמך הגדרת סוגייה</h2>
+            </div>
+            <div id="finalReport" class="final-report">
+                <!-- הסיכום הסופי יוצג כאן -->
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-secondary" onclick="goBack()">→ חזור אחורה</button>
+                <button class="btn" onclick="downloadReport()">📄 הורד מסמך הגדרת סוגייה</button>
+                <button class="btn btn-secondary" onclick="startNew()">🔄 התחל ניתוח חדש</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    let currentStep = 1;
+    let extractedData = {};
+    let finalIssue = {};
+
+    function showMessage(type, message) {
+        const el = document.getElementById(type === 'error' ? 'errorMessage' : 'successMessage');
+        el.textContent = message;
+        el.style.display = 'block';
+        setTimeout(() => { el.style.display = 'none'; }, 5000);
+    }
+
+    function showLoading(show) { document.getElementById('loadingMessage').style.display = show ? 'block' : 'none'; }
+
+    function goBack() {
+        if (currentStep > 1) {
+            moveToStep(currentStep - 1);
+        }
+    }
+
+    function moveToStep(step) {
+        document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
+        document.getElementById(`step${step}`).classList.add('active');
+        currentStep = step;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (step === 2) generateIssueCards();
+        if (step === 4) generateFinalReport();
+    }
+    
+    function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        showLoading(true);
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const doc = new DOMParser().parseFromString(e.target.result, 'text/html');
+                parseReport(doc);
+            } catch (error) {
+                showMessage('error', 'שגיאה בעיבוד הקובץ. ודא שזהו קובץ HTML תקין.');
+                console.error(error);
+            } finally {
+                showLoading(false);
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    function parseReport(doc) {
+        try {
+            const challenge = doc.querySelector('h2')?.textContent.trim() || 'לא נמצא אתגר';
+            const rootCauseHeader = Array.from(doc.querySelectorAll('h3')).find(h => h.textContent.includes('שורש'));
+            let rootCauses = [];
+            if (rootCauseHeader) {
+                const list = rootCauseHeader.nextElementSibling;
+                if (list && (list.tagName === 'UL' || list.tagName === 'P')) {
+                    let items = Array.from(list.querySelectorAll('li, p'));
+                    if(items.length > 0){
+                        rootCauses = items.map(item => item.textContent.replace(/^•\s*/, '').trim()).filter(Boolean);
+                    } else { 
+                        rootCauses = list.textContent.split(/[\n•;]/).map(s => s.trim()).filter(s => s.length > 5);
+                    }
+                }
+            }
+
+            if (rootCauses.length === 0) {
+                 rootCauses.push("לא זוהו גורמי שורש ספציפיים בדוח, אנא השתמש בדמו או בדוק את הדוח שהעלית.");
+                 showMessage('error', 'לא זוהו גורמי שורש בדוח. ייתכן ששדה "למה 5" היה ריק.');
+            }
+
+            extractedData = { challenge, rootCauses };
+            displayDataSummary();
+            document.getElementById('proceedToStep2').disabled = false;
+            showMessage('success', 'הדוח נקלט ונותח בהצלחה!');
+        } catch (e) {
+            showMessage('error', 'לא ניתן היה לחלץ נתונים מהדוח. הפורמט אינו תואם.');
+            console.error(e);
+        }
+    }
+
+    function displayDataSummary() {
+        const summaryDiv = document.getElementById('dataSummary');
+        summaryDiv.innerHTML = `
+            <h3>✅ סיכום הנתונים שחולצו:</h3>
+            <p><strong>האתגר המרכזי:</strong> ${extractedData.challenge}</p>
+            <p><strong>גורמי שורש עיקריים:</strong></p>
+            <ul>${extractedData.rootCauses.map(rc => `<li>${rc}</li>`).join('')}</ul>
+        `;
+        summaryDiv.style.display = 'block';
+    }
+    
+    function loadDemoData() {
+        extractedData = {
+            challenge: 'אתגרי שפה וקריאה',
+            rootCauses: [
+                'תפיסות ואמונות מגבילות של הצוות החינוכי בנוגע ליכולות התלמידים',
+                'חוסר חזון בית ספרי משותף וברור בתחום השפה'
+            ]
+        };
+        displayDataSummary();
+        document.getElementById('proceedToStep2').disabled = false;
+        showMessage('success', 'נתוני הדמו נטענו בהצלחה!');
+    }
+
+    function generateIssueCards() {
+        const container = document.getElementById('issueCardContainer');
+        container.innerHTML = ''; 
+
+        if (!extractedData.rootCauses || extractedData.rootCauses.length === 0) {
+            container.innerHTML = `<p class="error" style="display:block;">לא נמצאו גורמי שורש לניתוח. אנא חזור אחורה וטען דוח תקין.</p>`;
+            return;
+        }
+
+        extractedData.rootCauses.forEach(cause => {
+            const suggestions = generateSuggestionsFromCause(cause);
+            suggestions.forEach(sugg => {
+                const card = document.createElement('div');
+                card.className = 'issue-card';
+                const fullIssueText = `כיצד ניתן ל<strong>${sugg.action}</strong> את <strong>${sugg.subject}</strong> ב<strong>${sugg.context}</strong>, על מנת ל<strong>${sugg.result}</strong>?`;
+                
+                card.innerHTML = `
+                    <h4>${sugg.title}</h4>
+                    <p class="issue-question">${fullIssueText}</p>
+                    <div class="rationale-box">
+                        <p><strong>📝 מבוסס על גורם השורש:</strong> "${cause}"</p>
+                        <p><strong>🧠 רציונל:</strong> ${sugg.rationale}</p>
+                        <p><strong>🎯 רמת התערבות:</strong> <span class="level-badge">${sugg.level}</span></p>
+                    </div>
+                    <button class="btn" style="margin-top: 15px;" onclick='selectIssue(${JSON.stringify(sugg)})'>בחר סוגייה זו</button>
+                `;
+                container.appendChild(card);
+            });
+        });
+    }
+    
+    function generateSuggestionsFromCause(cause) {
+        const causeLower = cause.toLowerCase();
+        let action, subject, context, result, vision;
+        const suggestions = [];
+
+        const extractKeywords = (keywords) => keywords.find(kw => causeLower.includes(kw));
+        
+        const visionKw = extractKeywords(['חזון', 'אסטרטגיה']);
+        const beliefsKw = extractKeywords(['תפיסות', 'אמונות', 'ציפיות']);
+        const skillsKw = extractKeywords(['מיומנויות', 'יכולות', 'כלים', 'הכשרה']);
+        const cultureKw = extractKeywords(['תרבות', 'אקלים', 'שיתוף פעולה', 'שגרות']);
+        const dataKw = extractKeywords(['נתונים', 'הערכה', 'מדידה']);
+
+        if (beliefsKw || skillsKw) {
+            action = "לפתח ולהעצים";
+            subject = (beliefsKw) ? "התפיסות והאמונות המקצועיות של הצוותים החינוכיים" : "המיומנויות והכלים הפדגוגיים של המורים";
+            context = "באמצעות למידת עמיתים, הכשרות ממוקדות וליווי אישי";
+            result = "להוביל לשינוי בפרקטיקות ההוראה ולשפר את הישגי התלמידים";
+            vision = "צוות חינוכי בעל תחושת מסוגלות גבוהה, המאמין ביכולתו לקדם כל תלמיד ומצויד בכלים המתאימים לכך.";
+            suggestions.push({ title: "פיתוח יכולות ומסוגלות בצוות", action, subject, context, result, vision, rationale: `מתמקד בבניית ההון האנושי כמענה ישיר ל"${cause}"`, level: "פרט (צוות)" });
+        }
+
+        if (cultureKw || dataKw || visionKw) {
+            action = "לבנות ולהטמיע";
+            subject = (cultureKw) ? "שגרות עבודה מקצועיות המקדמות שיתוף פעולה ולמידה" : (dataKw) ? "תהליכים מבוססי נתונים לקבלת החלטות" : "חזון ותפיסה פדגוגית משותפת";
+            context = "בכלל קהילת בית הספר";
+            result = "ליצור תרבות ארגונית של שיפור מתמיד ואחריות משותפת";
+            vision = "ארגון לומד, המקיים שיח מקצועי פתוח ומבוסס אמון, הפועל במשותף להשגת יעדים ברורים.";
+             suggestions.push({ title: "בניית תהליכים ותרבות ארגונית", action, subject, context, result, vision, rationale: `מטפל במבנים ובתהליכים המאפשרים את קיום ה-"${cause}"`, level: "מערכת (תהליכים)" });
+        }
+
+        action = "להוביל שינוי תפיסתי ומעשי";
+        subject = `ההתמודדות עם "${cause}"`;
+        context = "באמצעות בניית תכנית התערבות מערכתית";
+        result = "לפתור את הבעיה מהשורש וליצור שיפור בר-קיימא";
+        vision = `בית ספר המתמודד באופן פרואקטיבי עם אתגריו העמוקים והופך אותם למנוף לצמיחה.`
+        suggestions.push({ title: "התמודדות מערכתית עם גורם השורש", action, subject, context, result, vision, rationale: `גישה מקיפה שמטרתה לתקוף את גורם השורש באופן ישיר דרך תוכנית פעולה ייעודית.`, level: "אסטרטגיה (התערבות)" });
+
+        return suggestions;
+    }
+
+    function selectIssue(issueData) {
+        finalIssue = issueData;
+        document.getElementById('editAction').value = finalIssue.action;
+        document.getElementById('editSubject').value = finalIssue.subject;
+        document.getElementById('editContext').value = finalIssue.context;
+        document.getElementById('editResult').value = finalIssue.result;
+        document.getElementById('editVision').value = finalIssue.vision;
+        updateFinalIssue();
+        moveToStep(3);
+    }
+    
+    function updateFinalIssue() {
+        const action = document.getElementById('editAction').value;
+        const subject = document.getElementById('editSubject').value;
+        const context = document.getElementById('editContext').value;
+        const result = document.getElementById('editResult').value;
+        
+        finalIssue.action = action;
+        finalIssue.subject = subject;
+        finalIssue.context = context;
+        finalIssue.result = result;
+        finalIssue.vision = document.getElementById('editVision').value;
+        
+        document.getElementById('finalIssueText').innerHTML = `כיצד ניתן ל<strong>${action}</strong> את <strong>${subject}</strong> ב<strong>${context}</strong>, על מנת ל<strong>${result}</strong>?`;
+    }
+
+    function generateFinalReport() {
+        const reportDiv = document.getElementById('finalReport');
+        reportDiv.innerHTML = `
+            <h2>מסמך הגדרת סוגייה מרכזית</h2>
+            <hr><br>
+            <h3>1. האתגר המרכזי שנותח</h3>
+            <p>${extractedData.challenge}</p>
+            <br>
+            <h3>2. סיכום גורמי השורש</h3>
+            <ul>${extractedData.rootCauses.map(rc => `<li>${rc}</li>`).join('')}</ul>
+            <br>
+            <h3>3. הסוגייה המרכזית לפעולה</h3>
+            <p>${document.getElementById('finalIssueText').innerHTML}</p>
+            <br>
+            <h3>4. חזון אסטרטגי</h3>
+            <p>${finalIssue.vision || "לא הוגדר חזון."}</p>
+        `;
+    }
+
+    function downloadReport() {
+        const reportContent = document.getElementById('finalReport').innerHTML;
+        const fullHtml = `
+            <!DOCTYPE html><html dir="rtl" lang="he">
+            <head><meta charset="UTF-8"><title>מסמך הגדרת סוגייה - ${extractedData.challenge}</title>
+            <style>body{font-family:Arial,sans-serif;direction:rtl;line-height:1.6;margin:30px;}h2,h3{color:#2980b9;border-bottom:1px solid #ccc;padding-bottom:5px;}</style>
+            </head><body>${reportContent}
+            <div id="data-for-next-app" style="display:none;">
+              <span data-key="challenge">${extractedData.challenge}</span>
+              <span data-key="main_issue_question">${document.getElementById('finalIssueText').textContent}</span>
+              <span data-key="vision">${finalIssue.vision}</span>
+            </div></body></html>`;
+        const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `הגדרת_סוגייה_${extractedData.challenge.replace(/\s+/g, '_')}.html`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+        showMessage('success', 'הדוח הורד בהצלחה!');
+    }
+
+    function startNew() {
+        extractedData = {};
+        finalIssue = {};
+        document.getElementById('fileInput').value = '';
+        document.getElementById('dataSummary').style.display = 'none';
+        document.getElementById('proceedToStep2').disabled = true;
+        moveToStep(1);
+    }
+</script>
+</body>
+</html>

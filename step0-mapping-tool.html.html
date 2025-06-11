@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>טבלת מיפוי בתי ספר למפקחים</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f6fa;
+            padding: 20px;
+            direction: rtl;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .inspector-input {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .inspector-input label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2d3436;
+        }
+
+        .inspector-input input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            max-height: 80vh;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 2000px;
+        }
+
+        th {
+            background: linear-gradient(135deg, #636e72 0%, #2d3436 100%);
+            color: white;
+            padding: 15px 8px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1em;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-right: 1px solid #555;
+            vertical-align: middle;
+        }
+
+        th:first-child {
+            min-width: 160px;
+            text-align: right;
+        }
+
+        .subject-header {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%) !important;
+        }
+
+        td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #e9ecef;
+            border-right: 1px solid #e9ecef;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 1em;
+        }
+
+        td:first-child {
+            text-align: right;
+            font-weight: 600;
+            background: #f8f9fa;
+            position: sticky;
+            right: 0;
+            z-index: 5;
+        }
+
+        input[type="text"], input[type="number"], textarea, select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1em;
+            background: white;
+        }
+
+        .challenges-selector {
+            margin-top: 5px;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .challenges-header {
+            font-size: 0.8em;
+            color: #666;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .challenge-option {
+            display: block;
+            margin-bottom: 3px;
+            font-size: 0.75em;
+            text-align: right;
+        }
+
+        .challenge-option input {
+            margin-left: 4px;
+            transform: scale(0.8);
+        }
+
+        .delete-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .delete-btn:hover {
+            background: #ee5253;
+            transform: scale(1.05);
+        }
+
+        .summary {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #636e72;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 טבלת מיפוי בתי ספר</h1>
+        <p>כלי מקיף למיפוי בתי ספר עם תחומי ליבה ואתגרים מקצועיים</p>
+    </div>
+
+    <div class="controls">
+        <div class="inspector-input">
+            <label>שם המפקח/ת:</label>
+            <input type="text" id="inspector-name" placeholder="הכנס/י את שמך">
+        </div>
+        <button class="btn" onclick="addSchool()">➕ הוסף בית ספר</button>
+        <button class="btn" onclick="loadDemo()">🎯 טען נתוני דמו</button>
+        <button class="btn" onclick="exportData()">📊 ייצא נתונים</button>
+        <button class="btn" onclick="clearAll()">🗑️ נקה הכל</button>
+    </div>
+
+    <div class="table-container">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th rowspan="2">שם בית הספר</th>
+                        <th rowspan="2">מנהל/ת</th>
+                        <th rowspan="2">מס' תלמידים</th>
+                        <th colspan="4" class="subject-header">הישגים בתחומי הליבה</th>
+                        <th rowspan="2">אקלים חברתי-רגשי</th>
+                        <th rowspan="2">יציבות צוות</th>
+                        <th rowspan="2">חזון בית ספרי</th>
+                        <th rowspan="2">איכות צוות</th>
+                        <th rowspan="2">מנהיגות</th>
+                        <th rowspan="2">שיתופי פעולה</th>
+                        <th rowspan="2">מעורבות הורים</th>
+                        <th rowspan="2">ארגון ההוראה</th>
+                        <th rowspan="2">שיתוף פעולה בין מורים</th>
+                        <th rowspan="2">הערות / פעולות</th>
+                        <th rowspan="2">פעולות</th>
+                    </tr>
+                    <tr>
+                        <th class="subject-header">שפה</th>
+                        <th class="subject-header">מתמטיקה</th>
+                        <th class="subject-header">אנגלית</th>
+                        <th class="subject-header">מדעים</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td colspan="18" class="empty-state">
+                            <h3>🏫 לא נוספו בתי ספר עדיין</h3>
+                            <p>לחץ על "הוסף בית ספר" או "טען נתוני דמו" כדי להתחיל</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="summary">
+        <h3>📈 סיכום המיפוי</h3>
+        <div style="font-size: 1.5em; margin-top: 10px;">
+            <strong id="totalCount">0</strong> בתי ספר במיפוי
+        </div>
+    </div>
+
+    <script>
+        let schools = [];
+        let schoolId = 1;
+
+        // אתגרים מקצועיים - רשימה מלאה
+        const challenges = {
+            language: [
+                'רמת הבנת הנקרא אינה מספקת',
+                'כישורי כתיבה הדורשים שיפור',
+                'אוצר מילים מוגבל ביחס לדרישות תוכנית הלימודים',
+                'קושי בביטוי בעל פה ובניסוח רעיונות',
+                'היעדר תרבות קריאה מבוססת בבית הספר',
+                'מחסור במענה דיפרנציאלי לתלמידים דוברי שפות אחרות'
+            ],
+            math: [
+                'שליטה לא מספקת במיומנויות יסוד בחשבון',
+                'קושי באסטרטגיות לפתרון בעיות מתמטיות',
+                'חרדת מתמטיקה המשפיעה על הישגי התלמידים',
+                'מחסור בשימוש באמצעי המחשה ואמצעים דידקטיים',
+                'היעדר דיפרנציאציה מספקת בהוראה',
+                'חוסר בקישור בין המתמטיקה לחיי היומיום'
+            ],
+            english: [
+                'חוסר ביטחון בשימוש בשפה האנגלית בעל פה',
+                'חשיפה מוגבלת לאנגלית מחוץ למסגרת השיעור',
+                'שיטות הוראה שאינן מותאמות לצרכי המאה ה-21',
+                'שימוש מוגבל בכלים טכנולוגיים להוראת השפה',
+                'קבוצות למידה גדולות המקשות על תרגול אפקטיבי',
+                'מחסור בשימוש בחומרים אותנטיים בהוראה'
+            ],
+            science: [
+                'מחסור בציוד מעבדה ואמצעי המחשה',
+                'פיתוח לא מספק של מיומנויות חקר מדעי',
+                'מיעוט התנסויות מעשיות בתהליכי למידה',
+                'פיתוח לא מספק של חשיבה מדעית',
+                'תוכנית לימודים שאינה מעודכנת לחזית המדע',
+                'חוסר בקישור בין תכני המדע לסביבה ולקהילה'
+            ],
+            climate: [
+                'אירועי אלימות תכופים הדורשים התערבות',
+                'אינטראקציות לא מיטביות בין תלמידים',
+                'תחושת שייכות נמוכה של תלמידים לבית הספר',
+                'מחסור במענה רגשי מותאם לצרכי התלמידים',
+                'אינטראקציות לא מיטביות בין מורים לתלמידים',
+                'היעדר תרבות של הכרה והוקרת הישגים'
+            ],
+            staff_stability: [
+                'תחלופה גבוהה של צוות הוראה',
+                'הסתמכות גבוהה על מורים מחליפים',
+                'מחסור בליווי והדרכה למורים חדשים',
+                'תנאי עבודה שאינם תומכים בהתפתחות מקצועית',
+                'מחסור בהזדמנויות לפיתוח מקצועי רלוונטי',
+                'שביעות רצון נמוכה בקרב צוות ההוראה'
+            ],
+            vision: [
+                'היעדר חזון בית ספרי ברור המציב במרכזו את הישגי התלמידים',
+                'חזון בית הספר אינו משותף לכלל הצוות החינוכי',
+                'היעדר תכנון אסטרטגי ארוך טווח',
+                'הגדרת יעדים לא מדידים או לא ריאליים',
+                'היעדר מעקב שיטתי אחר התקדמות לעבר היעדים',
+                'חוסר שיתוף הקהילה בגיבוש החזון הבית ספרי'
+            ],
+            staff_quality: [
+                'פערים בהכשרה המקצועית של צוות ההוראה',
+                'פרקטיקות הוראה שאינן מותאמות לצרכי התלמידים',
+                'מיעוט יוזמות חדשניות בתחום הפדגוגיה',
+                'אתגרים בניהול כיתה אפקטיבי',
+                'שימוש מוגבל בכלי הערכה מגוונים',
+                'ציפיות נמוכות מהישגי התלמידים'
+            ],
+            leadership: [
+                'מנהיגות פדגוגית הדורשת חיזוק והעמקה',
+                'תהליכי קבלת החלטות לא מבוססי נתונים',
+                'מנהיגות ביניים ללא תפקיד משמעותי בהובלת צוותים',
+                'חוסר אמון בין צוות המורים להנהלת בית הספר',
+                'היעדר תהליכים מכוונים לבניית צוות',
+                'ניהול לא אפקטיבי של תהליכי שינוי'
+            ],
+            collaboration: [
+                'היעדר שיח אפקטיבי עם הרשות לליווי ותמיכה',
+                'ניצול לא מיטבי של משאבים חיצוניים',
+                'קשרים מוגבלים עם גורמים עסקיים בקהילה',
+                'שיתוף פעולה מוגבל עם גורמים ברשות המקומית',
+                'היעדר תוכנית מובנית להתנדבות ומעורבות חברתית',
+                'מיעוט פעילויות תרבותיות משותפות עם הקהילה'
+            ],
+            parent_involvement: [
+                'השתתפות מוגבלת של הורים במפגשים בית ספריים',
+                'תקשורת לא רציפה בין בית הספר למשפחות התלמידים',
+                'מעורבות מוגבלת של הורים בפעילויות בית ספריות',
+                'מחסור בכלים להורים לתמיכה בלמידה בבית',
+                'מיעוט תוכניות הדרכה והעשרה להורים',
+                'חסמים תרבותיים המקשים על שיתוף פעולה עם הורים'
+            ],
+            teaching_organization: [
+                'היעדר שגרות של תכנון הוראה',
+                'פרקטיקות הוראה שאינן מותאמות לצרכי התלמידים',
+                'היעדר ניתוח שיטתי של נתוני התלמידים',
+                'היעדר דיונים משותפים על התקדמות התלמידים',
+                'היעדר שיח פתוח וכנה על הצורך בשיפור ההוראה'
+            ],
+            teacher_collaboration: [
+                'המורים אינם פועלים בשיתוף פעולה בתכנון ההוראה',
+                'היעדר פתיחות ללמידה של דרכי הוראה חדשות',
+                'ציפייה לשיפור הישגים ללא שינוי בשיטות ההוראה',
+                'היעדר שגרות של למידת עמיתים וצפייה הדדית',
+                'היעדר אמונה ביכולות התלמידים והטלת האחריות עליהם'
+            ]
+        };
+
+        function addSchool() {
+            const school = {
+                id: schoolId++,
+                name: '',
+                principal: '',
+                students: '',
+                languageScore: '',
+                mathScore: '',
+                englishScore: '',
+                scienceScore: '',
+                climate: '',
+                stability: '',
+                vision: '',
+                staffQuality: '',
+                leadership: '',
+                collaboration: '',
+                parentInvolvement: '',
+                teachingOrganization: '',
+                teacherCollaboration: '',
+                notes: '',
+                languageChallenges: [],
+                mathChallenges: [],
+                englishChallenges: [],
+                scienceChallenges: [],
+                climateChallenges: [],
+                stabilityChallenges: [],
+                visionChallenges: [],
+                staffQualityChallenges: [],
+                leadershipChallenges: [],
+                collaborationChallenges: [],
+                parentChallenges: [],
+                teachingOrganizationChallenges: [],
+                teacherCollaborationChallenges: []
+            };
+            
+            schools.push(school);
+            renderTable();
+            updateSummary();
+        }
+
+        function removeSchool(id) {
+            if (confirm('האם אתה בטוח שברצונך למחוק את בית הספר?')) {
+                schools = schools.filter(school => school.id !== id);
+                renderTable();
+                updateSummary();
+            }
+        }
+
+        function updateSchool(id, field, value) {
+            const school = schools.find(s => s.id === id);
+            if (school) {
+                school[field] = value;
+            }
+        }
+
+        function updateChallenge(id, category, challengeIndex, checked) {
+            const school = schools.find(s => s.id === id);
+            if (school) {
+                const challengeField = category + 'Challenges';
+                if (!school[challengeField]) {
+                    school[challengeField] = [];
+                }
+                
+                if (checked) {
+                    if (!school[challengeField].includes(challengeIndex)) {
+                        school[challengeField].push(challengeIndex);
+                    }
+                } else {
+                    school[challengeField] = school[challengeField].filter(c => c !== challengeIndex);
+                }
+            }
+        }
+
+        function createChallengeSelector(category, schoolId) {
+            const categoryData = challenges[category] || [];
+            const school = schools.find(s => s.id === schoolId);
+            const selectedChallenges = school ? (school[category + 'Challenges'] || []) : [];
+            
+            let html = `<div class="challenges-selector">
+                <div class="challenges-header">🎯 אתגרים מקצועיים (${selectedChallenges.length})</div>`;
+            
+            categoryData.forEach((challenge, index) => {
+                const isChecked = selectedChallenges.includes(index) ? 'checked' : '';
+                html += `<label class="challenge-option">
+                    <input type="checkbox" ${isChecked} 
+                           onchange="updateChallenge(${schoolId}, '${category}', ${index}, this.checked)">
+                    ${challenge}
+                </label>`;
+            });
+            
+            html += '</div>';
+            return html;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            
+            if (schools.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="18" class="empty-state">
+                            <h3>🏫 לא נוספו בתי ספר עדיין</h3>
+                            <p>לחץ על "הוסף בית ספר" או "טען נתוני דמו" כדי להתחיל</p>
+                        </td>
+                    </tr>`;
+                return;
+            }
+            
+            tbody.innerHTML = '';
+            
+            schools.forEach(school => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="text" value="${school.name}" onchange="updateSchool(${school.id}, 'name', this.value)" placeholder="שם בית הספר"></td>
+                    <td><input type="text" value="${school.principal}" onchange="updateSchool(${school.id}, 'principal', this.value)" placeholder="שם המנהל/ת"></td>
+                    <td><input type="number" value="${school.students}" onchange="updateSchool(${school.id}, 'students', this.value)" placeholder="מספר"></td>
+                    
+                    <td>
+                        <select onchange="updateSchool(${school.id}, 'languageScore', this.value)">
+                            <option value="">בחר רמה</option>
+                            <option value="1" ${school.languageScore === '1' ? 'selected' : ''}>1 - נמוכה מאוד</option>
+                            <option value="2" ${school.languageScore === '2' ? 'selected' : ''}>2 - נמוכה</option>
+                            <option value="3" ${school.languageScore === '3' ? 'selected' : ''}>3 - בינונית</option>
+                            <option value="4" ${school.languageScore === '4' ? 'selected' : ''}>4 - גבוהה</option>
+                            <option value="5" ${school.languageScore === '5' ? 'selected' : ''}>5 - גבוהה מאוד</option>
+                        </select>
+                        ${createChallengeSelector('language', school.id)}
+                    </td>
+                    
+                    <td>
+                        <select onchange="updateSchool(${school.id}, 'mathScore', this.value)">
+                            <option value="">בחר רמה</option>
+                            <option value="1" ${school.mathScore === '1' ? 'selected' : ''}>1 - נמוכה מאוד</option>
+                            <option value="2" ${school.mathScore === '2' ? 'selected' : ''}>2 - נמוכה</option>
+                            <option value="3" ${school.mathScore === '3' ? 'selected' : ''}>3 - בינונית</option>
+                            <option value="4" ${school.mathScore === '4' ? 'selected' : ''}>4 - גבוהה</option>
+                            <option value="5" ${school.mathScore === '5' ? 'selected' : ''}>5 - גבוהה מאוד</option>
+                        </select>
+                        ${createChallengeSelector('math', school.id)}
+                    </td>
+                    
+                    <td>
+                        <select onchange="updateSchool(${school.id}, 'englishScore', this.value)">
+                            <option value="">בחר רמה</option>
+                            <option value="1" ${school.englishScore === '1' ? 'selected' : ''}>1 - נמוכה מאוד</option>
+                            <option value="2" ${school.englishScore === '2' ? 'selected' : ''}>2 - נמוכה</option>
+                            <option value="3" ${school.englishScore === '3' ? 'selected' : ''}>3 - בינונית</option>
+                            <option value="4" ${school.englishScore === '4' ? 'selected' : ''}>4 - גבוהה</option>
+                            <option value="5" ${school.englishScore === '5' ? 'selected' : ''}>5 - גבוהה מאוד</option>
+                        </select>
+                        ${createChallengeSelector('english', school.id)}
+                    </td>
+                    
+                    <td>
+                        <select onchange="updateSchool(${school.id}, 'scienceScore', this.value)">
+                            <option value="">בחר רמה</option>
+                            <option value="1" ${school.scienceScore === '1' ? 'selected' : ''}>1 - נמוכה מאוד</option>
+                            <option value="2" ${school.scienceScore === '2' ? 'selected' : ''}>2 - נמוכה</option>
+                            <option value="3" ${school.scienceScore === '3' ? 'selected' : ''}>3 - בינונית</option>
+                            <option value="4" ${school.scienceScore === '4' ? 'selected' : ''}>4 - גבוהה</option>
+                            <option value="5" ${school.scienceScore === '5' ? 'selected' : ''}>5 - גבוהה מאוד</option>
+                        </select>
+                        ${createChallengeSelector('science', school.id)}
+                    </td>
+                    
+                    <td>
+                        <select onchange="updateSchool(${school.id}, 'climate', this.value)">
+                            <option value="">בחר רמה</option>
+                            <option value="1" ${school.climate === '1' ? 'selected' : ''}>1 - נמוכה מאוד</option>
+                            <option value="2" ${school.climate === '2' ? 'selected' : ''}>2 - נמוכה</option>
+                            <option value="3" ${school.climate === '3' ? 'selected' : ''}>3 - בינונית</option>
+                            <option value="4" ${school.climate === '4' ? 'selected' : ''}>4 - גבוהה</option>
+                            <option value="5" ${school.climate === '5' ? 'selected' : ''}>5 - גבוהה מאוד</option>
+                        </select>
+                        ${createChallengeSelector('climate', school.id)}
+                    </td>
+                    
+                    <td>
+                        <select onchange="updateSchool(${school.id}, 'stability', this.value)">
+                            <option value="">בחר רמה</option>
+                            <option value="1" ${school.stability === '1' ? 'selected' : ''}>1 - נמוכה מאוד</option>
+                            <option value="2" ${school.stability === '2' ? 'selected' : ''}>2 - נמוכה</option>
+                            <option value="3" ${school.stability === '3' ? 'selected' : ''}>3 - בינונית</option>
+                            <option value="4" ${school.stability === '4' ? 'selected' : ''}>4 - גבוהה</option>
+                            <option value="5" ${school.stability === '5' ? 'selected' : ''}>5 - גבוהה מאוד</option>
+                        </select>
+                        ${createChallengeSelector('staff_stability', school.id)}
+                    </td>
+                    
+                    <td>
+                        <select onchange="updateSchool(${school.id}, 'vision', this.value)">
+                            <option value="">בחר רמה</option>
+                            <option value="1" ${school.vision === '1' ? 'selected' : ''}>1 - נמוכה מאוד</option>
+                            <option value="2" ${school.vision === '2' ? 'selected' : ''}>2 - נמוכה</option>
+                            <option value="3" ${school.vision === '3' ? 'selected' : ''}>3 - בינונית</option>
+                            <option value="4" ${school.vision === '4' ? 'selected' : ''}>4 - גבוהה</option>
+                            <option value="5" ${school.vision === '5' ? 'selected' : ''}>5 - גבוהה מאוד</option>
+                        </select>
+                        ${createChallengeSelector('vision', school.id)}
+                    </td>
+                    
+                    <td>
+                        <select onchange="updateSchool(${school.id}, 'staffQuality', this.value)">
+                            <option value="">בחר רמה</option>
+                            <option value="1" ${school.staffQuality === '1' ? 'selected' : ''}>1 - נמוכה מאוד</option>
+                            <option value="2" ${school.staffQuality === '2' ? 'selected' : ''}>2 - נמוכה</option>
+                            <option value="3" ${school.staffQuality === '3' ? 'selected' : ''}>3 - בינונית</option>
+                            <option value="4" ${school.staffQuality === '4' ? 'selected' : ''}>4 - גבוהה</option>
+                            <option value="5" ${school.staffQuality === '5' ? 'selected' : ''}>5 - גבוהה מאוד</option>
+                        </select>
+                        ${createChallengeSelector('staff_quality', school.id)}
+                    </td>
+                    
+                    <td>
+                        <select onchange="updateSchool(${school.id}, 'leadership', this.value)">
+                            <option value="">בחר רמה</option>
+                            <option value="1" ${school.leadership === '1' ? 'selected' : ''}>1 - נמוכה מאוד</option>
+                            <option value="2" ${school.leadership === '2' ? 'selected' : ''}>2 - נמוכה</option>
+                            <option value="3" ${school.leadership === '3' ? 'selected' : ''}>3 - בינונית</option>
+                            <option value="4" ${school.leadership === '4' ? 'selected' : ''}>4 - גבוהה</option>
+                            <option value="5" ${school.leadership === '5' ? 'selected' : ''}>5 - גבוהה מאוד</option>
+                        </select>
+                        ${createChallengeSelector('leadership', school.id)}
+                    </td>
+                    
+                    <td>
+                        <select onchange="updateSchool(${school.id}, 'collaboration', this.value)">
+                            <option value="">בחר רמה</option>
+                            <option value="1" ${school.collaboration === '1' ? 'selected' : ''}>1 - נמוכה מאוד</option>
+                            <option value="2" ${school.collaboration === '2' ? 'selected' : ''}>2 - נמוכה</option>
+                            <option value="3" ${school.collaboration === '3' ? 'selected' : ''}>3 - בינונית</option>
+                            <option value="4" ${school.collaboration === '4' ? 'selected' : ''}>4 - גבוהה</option>
+                            <option value="5" ${school.collaboration === '5' ? 'selected' : ''}>5 - גבוהה מאוד</option>
+                        </select>
+                        ${createChallengeSelector('collaboration', school.id)}
+                    </td>
+                    
+                    <td>
+                        <select onchange="updateSchool(${school.id}, 'parentInvolvement', this.value)">
+                            <option value="">בחר רמה</option>
+                            <option value="1" ${school.parentInvolvement === '1' ? 'selected' : ''}>1 - נמוכה מאוד</option>
+                            <option value="2" ${school.parentInvolvement === '2' ? 'selected' : ''}>2 - נמוכה</option>
+                            <option value="3" ${school.parentInvolvement === '3' ? 'selected' : ''}>3 - בינונית</option>
+                            <option value="4" ${school.parentInvolvement === '4' ? 'selected' : ''}>4 - גבוהה</option>
+                            <option value="5" ${school.parentInvolvement === '5' ? 'selected' : ''}>5 - גבוהה מאוד</option>
+                        </select>
+                        ${createChallengeSelector('parent_involvement', school.id)}
+                    </td>
+                    
+                    <td>
+                        <select onchange="updateSchool(${school.id}, 'teachingOrganization', this.value)">
+                            <option value="">בחר רמה</option>
+                            <option value="1" ${school.teachingOrganization === '1' ? 'selected' : ''}>1 - נמוכה מאוד</option>
+                            <option value="2" ${school.teachingOrganization === '2' ? 'selected' : ''}>2 - נמוכה</option>
+                            <option value="3" ${school.teachingOrganization === '3' ? 'selected' : ''}>3 - בינונית</option>
+                            <option value="4" ${school.teachingOrganization === '4' ? 'selected' : ''}>4 - גבוהה</option>
+                            <option value="5" ${school.teachingOrganization === '5' ? 'selected' : ''}>5 - גבוהה מאוד</option>
+                        </select>
+                        ${createChallengeSelector('teaching_organization', school.id)}
+                    </td>
+                    
+                    <td>
+                        <select onchange="updateSchool(${school.id}, 'teacherCollaboration', this.value)">
+                            <option value="">בחר רמה</option>
+                            <option value="1" ${school.teacherCollaboration === '1' ? 'selected' : ''}>1 - נמוכה מאוד</option>
+                            <option value="2" ${school.teacherCollaboration === '2' ? 'selected' : ''}>2 - נמוכה</option>
+                            <option value="3" ${school.teacherCollaboration === '3' ? 'selected' : ''}>3 - בינונית</option>
+                            <option value="4" ${school.teacherCollaboration === '4' ? 'selected' : ''}>4 - גבוהה</option>
+                            <option value="5" ${school.teacherCollaboration === '5' ? 'selected' : ''}>5 - גבוהה מאוד</option>
+                        </select>
+                        ${createChallengeSelector('teacher_collaboration', school.id)}
+                    </td>
+                    
+                    <td><textarea rows="2" onchange="updateSchool(${school.id}, 'notes', this.value)" placeholder="הערות ופעולות מתוכננות">${school.notes}</textarea></td>
+                    <td><button class="delete-btn" onclick="removeSchool(${school.id})">🗑️ מחק</button></td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateSummary() {
+            document.getElementById('totalCount').textContent = schools.length;
+        }
+
+        function loadDemo() {
+            schools = [
+                {
+                    id: 1,
+                    name: 'בית ספר יסודי הגליל',
+                    principal: 'רונית כהן',
+                    students: '520',
+                    languageScore: '4',
+                    mathScore: '4',
+                    englishScore: '3',
+                    scienceScore: '4',
+                    climate: '4',
+                    stability: '4',
+                    vision: '4',
+                    staffQuality: '4',
+                    leadership: '4',
+                    collaboration: '3',
+                    parentInvolvement: '4',
+                    teachingOrganization: '4',
+                    teacherCollaboration: '3',
+                    notes: 'בית ספר מוביל באזור, מהווה בית ספר מנטור. דורש חיזוק קל בשיתופי פעולה חיצוניים',
+                    languageChallenges: [],
+                    mathChallenges: [],
+                    englishChallenges: [2],
+                    scienceChallenges: [],
+                    climateChallenges: [],
+                    stabilityChallenges: [],
+                    visionChallenges: [],
+                    staffQualityChallenges: [],
+                    leadershipChallenges: [],
+                    collaborationChallenges: [1],
+                    parentChallenges: [],
+                    teachingOrganizationChallenges: [],
+                    teacherCollaborationChallenges: [3]
+                },
+                {
+                    id: 2,
+                    name: 'בית ספר יסודי הדקלים',
+                    principal: 'משה לוי',
+                    students: '380',
+                    languageScore: '2',
+                    mathScore: '2',
+                    englishScore: '2',
+                    scienceScore: '2',
+                    climate: '2',
+                    stability: '2',
+                    vision: '2',
+                    staffQuality: '2',
+                    leadership: '2',
+                    collaboration: '2',
+                    parentInvolvement: '2',
+                    teachingOrganization: '2',
+                    teacherCollaboration: '2',
+                    notes: 'בית ספר בסיכון גבוה - דורש תוכנית התערבות מקיפה ומעקב צמוד. עדיפות לפיתוח מקצועי נרחב',
+                    languageChallenges: [1, 4, 0],
+                    mathChallenges: [0, 1, 4],
+                    englishChallenges: [0, 1, 4],
+                    scienceChallenges: [0, 2, 3],
+                    climateChallenges: [0, 1, 2],
+                    stabilityChallenges: [0, 1, 5],
+                    visionChallenges: [0, 1],
+                    staffQualityChallenges: [0, 1, 5],
+                    leadershipChallenges: [0, 1],
+                    collaborationChallenges: [0, 1],
+                    parentChallenges: [0, 1],
+                    teachingOrganizationChallenges: [0, 2, 4],
+                    teacherCollaborationChallenges: [0, 1, 4]
+                }
+            ];
+
+            // יצירת 16 בתי ספר נוספים
+            const additionalSchools = [];
+            const schoolNames = [
+                'בית ספר יסודי אלונים', 'בית ספר יסודי הזיתים', 'בית ספר יסודי כרמלים',
+                'בית ספר יסודי שקדים', 'בית ספר יסודי תמרים', 'בית ספר יסודי ברושים',
+                'בית ספר יסודי אשלים', 'בית ספר יסודי ארזים', 'בית ספר יסודי סביונים',
+                'בית ספר יסודי רימונים', 'בית ספר יסודי לבנדרים', 'בית ספר יסודי חרוצים',
+                'בית ספר יסודי נרקיסים', 'בית ספר יסודי פריחת האביב', 'בית ספר יסודי גפנים',
+                'בית ספר יסודי תלתנים'
+            ];
+            
+            const principals = [
+                'דנה אברהם', 'יוסי מזרחי', 'נירית שמיר', 'אביבה רוזן', 'רועי בן דוד',
+                'מירי ארדיטי', 'דוד גרינברג', 'שרה כץ', 'אילן שטרן', 'יעל פרידמן',
+                'רוני אהרון', 'מיכל בר', 'עמית גולד', 'ליאת מור', 'אבי שלום', 'גלית ירון'
+            ];
+
+            for (let i = 0; i < 16; i++) {
+                const score1 = Math.floor(Math.random() * 5) + 1;
+                const score2 = Math.floor(Math.random() * 5) + 1;
+                additionalSchools.push({
+                    id: i + 3,
+                    name: schoolNames[i],
+                    principal: principals[i],
+                    students: String(Math.floor(Math.random() * 400) + 150),
+                    languageScore: String(score1),
+                    mathScore: String(score2),
+                    englishScore: String(Math.floor(Math.random() * 5) + 1),
+                    scienceScore: String(Math.floor(Math.random() * 5) + 1),
+                    climate: String(Math.floor(Math.random() * 5) + 1),
+                    stability: String(Math.floor(Math.random() * 5) + 1),
+                    vision: String(Math.floor(Math.random() * 5) + 1),
+                    staffQuality: String(Math.floor(Math.random() * 5) + 1),
+                    leadership: String(Math.floor(Math.random() * 5) + 1),
+                    collaboration: String(Math.floor(Math.random() * 5) + 1),
+                    parentInvolvement: String(Math.floor(Math.random() * 5) + 1),
+                    teachingOrganization: String(Math.floor(Math.random() * 5) + 1),
+                    teacherCollaboration: String(Math.floor(Math.random() * 5) + 1),
+                    notes: `בית ספר עם אתגרים ${score1 < 3 ? 'רבים' : 'מתונים'}. ${score2 < 3 ? 'דורש התערבות מיידית' : 'פוטנציאל טוב לשיפור'}.`,
+                    languageChallenges: score1 < 3 ? [0, 1] : [],
+                    mathChallenges: score2 < 3 ? [0, 1, 2] : [],
+                    englishChallenges: Math.random() > 0.5 ? [0] : [],
+                    scienceChallenges: Math.random() > 0.7 ? [0] : [],
+                    climateChallenges: Math.random() > 0.6 ? [1] : [],
+                    stabilityChallenges: Math.random() > 0.7 ? [0] : [],
+                    visionChallenges: Math.random() > 0.8 ? [0] : [],
+                    staffQualityChallenges: Math.random() > 0.7 ? [1] : [],
+                    leadershipChallenges: Math.random() > 0.8 ? [0] : [],
+                    collaborationChallenges: Math.random() > 0.7 ? [0] : [],
+                    parentChallenges: Math.random() > 0.6 ? [0] : [],
+                    teachingOrganizationChallenges: Math.random() > 0.7 ? [0] : [],
+                    teacherCollaborationChallenges: Math.random() > 0.7 ? [0] : []
+                });
+            }
+
+            schools = schools.concat(additionalSchools);
+            
+            schoolId = 19;
+            document.getElementById('inspector-name').value = 'יעל נתן';
+            renderTable();
+            updateSummary();
+            
+            alert('נתוני דמו נטענו בהצלחה! 18 בתי ספר של המפקחת יעל נתן');
+        }
+
+        function exportData() {
+            const inspectorName = document.getElementById('inspector-name').value || 'לא צוין';
+            
+            let csvContent = '\uFEFF';
+            csvContent += '"מפקח/ת","שם בית הספר","מנהל/ת","מס\' תלמידים","שפה","מתמטיקה","אנגלית","מדעים","אקלים","יציבות","חזון","איכות צוות","מנהיגות","שיתופי פעולה","מעורבות הורים","ארגון הוראה","שיתוף מורים","הערות","אתגרי שפה","אתגרי מתמטיקה","אתגרי אנגלית","אתגרי מדעים","אתגרי אקלים","אתגרי יציבות צוות","אתגרי חזון","אתגרי איכות צוות","אתגרי מנהיגות","אתגרי שיתופי פעולה","אתגרי מעורבות הורים","אתגרי ארגון הוראה","אתגרי שיתוף מורים"\n';
+            
+            schools.forEach(school => {
+                const languageChallengesText = (school.languageChallenges || []).map(i => challenges.language[i]).filter(Boolean).join('; ');
+                const mathChallengesText = (school.mathChallenges || []).map(i => challenges.math[i]).filter(Boolean).join('; ');
+                const englishChallengesText = (school.englishChallenges || []).map(i => challenges.english[i]).filter(Boolean).join('; ');
+                const scienceChallengesText = (school.scienceChallenges || []).map(i => challenges.science[i]).filter(Boolean).join('; ');
+                const climateChallengesText = (school.climateChallenges || []).map(i => challenges.climate[i]).filter(Boolean).join('; ');
+                const stabilityChallengesText = (school.stabilityChallenges || []).map(i => challenges.staff_stability[i]).filter(Boolean).join('; ');
+                const visionChallengesText = (school.visionChallenges || []).map(i => challenges.vision[i]).filter(Boolean).join('; ');
+                const staffQualityChallengesText = (school.staffQualityChallenges || []).map(i => challenges.staff_quality[i]).filter(Boolean).join('; ');
+                const leadershipChallengesText = (school.leadershipChallenges || []).map(i => challenges.leadership[i]).filter(Boolean).join('; ');
+                const collaborationChallengesText = (school.collaborationChallenges || []).map(i => challenges.collaboration[i]).filter(Boolean).join('; ');
+                const parentChallengesText = (school.parentChallenges || []).map(i => challenges.parent_involvement[i]).filter(Boolean).join('; ');
+                const teachingOrganizationChallengesText = (school.teachingOrganizationChallenges || []).map(i => challenges.teaching_organization[i]).filter(Boolean).join('; ');
+                const teacherCollaborationChallengesText = (school.teacherCollaborationChallenges || []).map(i => challenges.teacher_collaboration[i]).filter(Boolean).join('; ');
+                
+                const row = [
+                    inspectorName,
+                    school.name || '',
+                    school.principal || '',
+                    school.students || '',
+                    school.languageScore || '',
+                    school.mathScore || '',
+                    school.englishScore || '',
+                    school.scienceScore || '',
+                    school.climate || '',
+                    school.stability || '',
+                    school.vision || '',
+                    school.staffQuality || '',
+                    school.leadership || '',
+                    school.collaboration || '',
+                    school.parentInvolvement || '',
+                    school.teachingOrganization || '',
+                    school.teacherCollaboration || '',
+                    school.notes || '',
+                    languageChallengesText,
+                    mathChallengesText,
+                    englishChallengesText,
+                    scienceChallengesText,
+                    climateChallengesText,
+                    stabilityChallengesText,
+                    visionChallengesText,
+                    staffQualityChallengesText,
+                    leadershipChallengesText,
+                    collaborationChallengesText,
+                    parentChallengesText,
+                    teachingOrganizationChallengesText,
+                    teacherCollaborationChallengesText
+                ].map(field => `"${String(field).replace(/"/g, '""')}"`);
+                
+                csvContent += row.join(',') + '\n';
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `מיפוי_בתי_ספר_מלא_${new Date().toLocaleDateString('he-IL').replace(/\./g, '_')}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            alert('הנתונים יוצאו בהצלחה עם כל האתגרים בטקסט מלא לכל התחומים!');
+        }
+
+        function clearAll() {
+            if (confirm('האם אתה בטוח שברצונך למחוק את כל הנתונים? פעולה זו אינה ניתנת לביטול.')) {
+                schools = [];
+                schoolId = 1;
+                document.getElementById('inspector-name').value = '';
+                renderTable();
+                updateSummary();
+                alert('כל הנתונים נמחקו!');
+            }
+        }
+
+        // אתחול הטבלה
+        renderTable();
+        updateSummary();
+    </script>
+</body>
+</html>
