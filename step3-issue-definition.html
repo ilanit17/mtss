@@ -98,7 +98,7 @@
             text-align: center;
         }
         .file-upload:hover { border-color: #2980b9; background: #f0f1ff; }
-        .file-upload input { position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; }
+        /* .file-upload input { position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; } */ /* הוסר */
         .upload-icon { font-size: 4em; color: #3498db; margin-bottom: 15px; }
         .data-summary { background: #ecf0f1; border-right: 5px solid #27ae60; padding: 20px; margin-top: 20px; border-radius: 8px; }
         .issue-card-container { display: grid; grid-template-columns: 1fr; gap: 25px; }
@@ -159,8 +159,7 @@
             <div class="step-header">
                 <h2>שלב 1: העלאת דוח ניתוח סיבות שורש</h2>
             </div>
-            <div class="file-upload" onclick="document.getElementById('fileInput').click()">
-                <input type="file" id="fileInput" accept=".html,.htm" onchange="handleFileUpload(event)">
+            <div class="file-upload" id="fileUploadAreaStep3">
                 <div class="upload-icon">📤</div>
                 <h3>לחץ להעלאת דוח ניתוח סיבות שורש</h3>
                 <p>האפליקציה תחפש את האתגר, התסמין וגורמי השורש שזוהו.</p>
@@ -273,9 +272,39 @@
         if (step === 4) generateFinalReport();
     }
     
-    function handleFileUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+    // --- START OF NEW triggerFileUploadStep3 FUNCTION ---
+    function triggerFileUploadStep3() {
+        const oldInput = document.getElementById('dynamicFileInputStep3');
+        if (oldInput) {
+            oldInput.removeEventListener('change', handleFileUpload); 
+            oldInput.remove();
+        }
+
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.id = 'dynamicFileInputStep3'; 
+        fileInput.accept = ".html,.htm"; 
+        fileInput.style.display = 'none'; 
+        
+        fileInput.addEventListener('change', handleFileUpload); 
+        
+        document.body.appendChild(fileInput); 
+        fileInput.click(); 
+    }
+    // --- END OF NEW triggerFileUploadStep3 FUNCTION ---
+
+    // --- START OF MODIFIED handleFileUpload ---
+    function handleFileUpload(event) { 
+        const dynamicFileInput = event.target; 
+        
+        if (!dynamicFileInput.files || dynamicFileInput.files.length === 0) {
+            console.log('לא נבחרו קבצים.');
+            if (dynamicFileInput) dynamicFileInput.remove();
+            return;
+        }
+        
+        const file = dynamicFileInput.files[0];
+
         showLoading(true);
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -287,31 +316,76 @@
                 console.error(error);
             } finally {
                 showLoading(false);
+                if (dynamicFileInput) dynamicFileInput.remove(); 
             }
         };
-        reader.readAsText(file);
+        reader.onerror = (error) => {
+            showMessage('error', 'שגיאה בקריאת הקובץ.');
+            console.error("FileReader error:", error);
+            showLoading(false);
+            if (dynamicFileInput) dynamicFileInput.remove();
+        };
+        try {
+             reader.readAsText(file);
+        } catch (error) {
+            showMessage('error', 'שגיאה כללית בטעינת הקובץ.');
+            console.error("Error initiating FileReader:", error);
+            showLoading(false);
+            if (dynamicFileInput) dynamicFileInput.remove();
+        }
     }
+    // --- END OF MODIFIED handleFileUpload ---
+
 
     function parseReport(doc) {
         try {
-            const challenge = doc.querySelector('h2')?.textContent.trim() || 'לא נמצא אתגר';
-            const rootCauseHeader = Array.from(doc.querySelectorAll('h3')).find(h => h.textContent.includes('שורש'));
+            // ניסיון לחלץ את כותרת האתגר ממספר מקומות אפשריים בדוח הקודם
+            let challenge = doc.querySelector('#challengeSummary h4')?.textContent.trim() || 
+                            doc.querySelector('.header h2')?.textContent.trim() || // אם הכותרת הראשית של הדוח הקודם
+                            doc.querySelector('title')?.textContent.split('-')[1]?.trim() || // מתוך תג ה-title
+                            'לא נמצא אתגר בדוח הקלט';
+
+            // ניסיון לחלץ גורמי שורש ממספר מקומות אפשריים
             let rootCauses = [];
-            if (rootCauseHeader) {
-                const list = rootCauseHeader.nextElementSibling;
-                if (list && (list.tagName === 'UL' || list.tagName === 'P')) {
-                    let items = Array.from(list.querySelectorAll('li, p'));
-                    if(items.length > 0){
+            const rootCauseHeaders = Array.from(doc.querySelectorAll('h3, h4')).filter(h => h.textContent.includes('שורש') || h.textContent.includes('למה 5'));
+            
+            if (rootCauseHeaders.length > 0) {
+                const listElement = rootCauseHeaders[0].nextElementSibling; // נניח שהרשימה באה מיד אחרי הכותרת
+                if (listElement && (listElement.tagName === 'UL' || listElement.tagName === 'P' || listElement.tagName === 'DIV')) {
+                    let items = [];
+                    if (listElement.tagName === 'UL') {
+                        items = Array.from(listElement.querySelectorAll('li'));
+                    } else if (listElement.tagName === 'P') {
+                         // אם זה <p>, נסה לפצל לפי <br> או לפי שורות חדשות אם הטקסט פשוט
+                        items = listElement.innerHTML.split(/<br\s*\/?>|\n/).map(line => ({ textContent: line.replace(/<[^>]+>/g, '').trim() })).filter(item => item.textContent);
+                    } else if (listElement.tagName === 'DIV') { // אם זה עטוף ב-div, חפש פסקאות או li בפנים
+                        items = Array.from(listElement.querySelectorAll('p, li'));
+                         if (items.length === 0 && listElement.textContent.trim().length > 10) { // אם אין אלמנטים פנימיים אבל יש תוכן טקסטואלי
+                            items = listElement.textContent.split(/[\n•;.]+/).map(line => ({ textContent: line.trim() })).filter(item => item.textContent);
+                        }
+                    }
+
+                    if (items.length > 0) {
                         rootCauses = items.map(item => item.textContent.replace(/^•\s*/, '').trim()).filter(Boolean);
-                    } else { 
-                        rootCauses = list.textContent.split(/[\n•;]/).map(s => s.trim()).filter(s => s.length > 5);
+                    } else if (listElement.textContent) { // אם אין פריטים ספציפיים אבל יש טקסט כללי
+                        rootCauses = listElement.textContent.split(/[\n•;.]+/).map(s => s.trim()).filter(s => s.length > 5);
+                    }
+                }
+            } else {
+                 // חיפוש חלופי אם לא נמצאה כותרת "שורש"
+                const why5Section = Array.from(doc.querySelectorAll('.why-level')).find(el => el.querySelector('h3')?.textContent.includes('למה 5'));
+                if (why5Section) {
+                    const pElement = why5Section.querySelector('p');
+                    if (pElement) {
+                         rootCauses = pElement.innerHTML.split(/<br\s*\/?>|\n/).map(line => line.replace(/<[^>]+>/g, '').trim()).filter(Boolean);
                     }
                 }
             }
 
+
             if (rootCauses.length === 0) {
-                 rootCauses.push("לא זוהו גורמי שורש ספציפיים בדוח, אנא השתמש בדמו או בדוק את הדוח שהעלית.");
-                 showMessage('error', 'לא זוהו גורמי שורש בדוח. ייתכן ששדה "למה 5" היה ריק.');
+                 rootCauses.push("לא זוהו גורמי שורש ספציפיים בדוח. אנא ודא שהדוח הקודם מכיל מידע תחת 'למה 5' או 'גורמי שורש'.");
+                 showMessage('error', 'לא זוהו גורמי שורש בדוח. ייתכן ששדה "למה 5" היה ריק או שהפורמט אינו מזוהה.');
             }
 
             extractedData = { challenge, rootCauses };
@@ -319,8 +393,11 @@
             document.getElementById('proceedToStep2').disabled = false;
             showMessage('success', 'הדוח נקלט ונותח בהצלחה!');
         } catch (e) {
-            showMessage('error', 'לא ניתן היה לחלץ נתונים מהדוח. הפורמט אינו תואם.');
-            console.error(e);
+            showMessage('error', 'לא ניתן היה לחלץ נתונים מהדוח. הפורמט אינו תואם או שהמידע הנדרש חסר.');
+            console.error("Error parsing report:", e);
+            // איפוס לטעינה חוזרת אם רוצים
+            document.getElementById('dataSummary').style.display = 'none';
+            document.getElementById('proceedToStep2').disabled = true;
         }
     }
 
@@ -329,7 +406,7 @@
         summaryDiv.innerHTML = `
             <h3>✅ סיכום הנתונים שחולצו:</h3>
             <p><strong>האתגר המרכזי:</strong> ${extractedData.challenge}</p>
-            <p><strong>גורמי שורש עיקריים:</strong></p>
+            <p><strong>גורמי שורש עיקריים שזוהו:</strong></p>
             <ul>${extractedData.rootCauses.map(rc => `<li>${rc}</li>`).join('')}</ul>
         `;
         summaryDiv.style.display = 'block';
@@ -337,10 +414,11 @@
     
     function loadDemoData() {
         extractedData = {
-            challenge: 'אתגרי שפה וקריאה',
+            challenge: 'אתגרי שפה וקריאה (מנתוני דמו)',
             rootCauses: [
-                'תפיסות ואמונות מגבילות של הצוות החינוכי בנוגע ליכולות התלמידים',
-                'חוסר חזון בית ספרי משותף וברור בתחום השפה'
+                'תפיסות ואמונות מגבילות של הצוות החינוכי בנוגע ליכולות התלמידים בתחום השפה.',
+                'חוסר חזון בית ספרי משותף וברור בתחום השפה, המוביל לחוסר מיקוד ועקביות.',
+                'היעדר שגרות פדגוגיות מבוססות נתונים לקידום מיומנויות שפה באופן דיפרנציאלי.'
             ]
         };
         displayDataSummary();
@@ -352,12 +430,14 @@
         const container = document.getElementById('issueCardContainer');
         container.innerHTML = ''; 
 
-        if (!extractedData.rootCauses || extractedData.rootCauses.length === 0) {
-            container.innerHTML = `<p class="error" style="display:block;">לא נמצאו גורמי שורש לניתוח. אנא חזור אחורה וטען דוח תקין.</p>`;
+        if (!extractedData.rootCauses || extractedData.rootCauses.length === 0 || extractedData.rootCauses.every(rc => rc.startsWith("לא זוהו"))) {
+            container.innerHTML = `<p class="error" style="display:block;">לא נמצאו גורמי שורש תקפים לניתוח. אנא חזור אחורה וטען דוח תקין או השתמש בנתוני דמו.</p>`;
             return;
         }
 
         extractedData.rootCauses.forEach(cause => {
+            if(cause.startsWith("לא זוהו")) return; // דלג על הודעות שגיאה כגורם שורש
+
             const suggestions = generateSuggestionsFromCause(cause);
             suggestions.forEach(sugg => {
                 const card = document.createElement('div');
@@ -377,6 +457,9 @@
                 container.appendChild(card);
             });
         });
+         if (container.children.length === 0) { // אם אחרי הכל לא נוצרו כרטיסיות
+            container.innerHTML = `<p style="text-align:center; color:#555; padding:20px; background:#f9f9f9; border-radius:8px;">לא נוצרו הצעות לסוגיות על בסיס גורמי השורש שזוהו. ייתכן שגורמי השורש אינם מפורטים מספיק או שהם כלליים מדי. נסה לחזור אחורה ולדייק את ניתוח סיבות השורש.</p>`;
+        }
     }
     
     function generateSuggestionsFromCause(cause) {
@@ -384,40 +467,60 @@
         let action, subject, context, result, vision;
         const suggestions = [];
 
-        const extractKeywords = (keywords) => keywords.find(kw => causeLower.includes(kw));
+        const extractKeywords = (keywords) => keywords.find(kw => causeLower.includes(kw.toLowerCase()));
         
-        const visionKw = extractKeywords(['חזון', 'אסטרטגיה']);
-        const beliefsKw = extractKeywords(['תפיסות', 'אמונות', 'ציפיות']);
-        const skillsKw = extractKeywords(['מיומנויות', 'יכולות', 'כלים', 'הכשרה']);
-        const cultureKw = extractKeywords(['תרבות', 'אקלים', 'שיתוף פעולה', 'שגרות']);
-        const dataKw = extractKeywords(['נתונים', 'הערכה', 'מדידה']);
+        const visionKw = extractKeywords(['חזון', 'אסטרטגיה', 'מדיניות']);
+        const beliefsKw = extractKeywords(['תפיסות', 'אמונות', 'ציפיות', 'מסוגלות', 'גישה']);
+        const skillsKw = extractKeywords(['מיומנויות', 'יכולות', 'כלים', 'הכשרה', 'ידע', 'פרקטיקות']);
+        const cultureKw = extractKeywords(['תרבות', 'אקלים', 'שיתוף פעולה', 'שגרות', 'תקשורת', 'שיח']);
+        const dataKw = extractKeywords(['נתונים', 'הערכה', 'מדידה', 'משוב']);
+        const resourcesKw = extractKeywords(['משאבים', 'זמן', 'תקציב', 'כוח אדם', 'תשתיות']);
+        const curriculumKw = extractKeywords(['תכנית לימודים', 'חומר', 'תוכן', 'פדגוגיה']);
+
 
         if (beliefsKw || skillsKw) {
             action = "לפתח ולהעצים";
-            subject = (beliefsKw) ? "התפיסות והאמונות המקצועיות של הצוותים החינוכיים" : "המיומנויות והכלים הפדגוגיים של המורים";
-            context = "באמצעות למידת עמיתים, הכשרות ממוקדות וליווי אישי";
-            result = "להוביל לשינוי בפרקטיקות ההוראה ולשפר את הישגי התלמידים";
-            vision = "צוות חינוכי בעל תחושת מסוגלות גבוהה, המאמין ביכולתו לקדם כל תלמיד ומצויד בכלים המתאימים לכך.";
-            suggestions.push({ title: "פיתוח יכולות ומסוגלות בצוות", action, subject, context, result, vision, rationale: `מתמקד בבניית ההון האנושי כמענה ישיר ל"${cause}"`, level: "פרט (צוות)" });
+            subject = (beliefsKw && !skillsKw) ? "התפיסות והאמונות המקצועיות של הצוותים החינוכיים" : 
+                      (skillsKw && !beliefsKw) ? "המיומנויות והכלים הפדגוגיים של המורים" :
+                      "תחושת המסוגלות והמיומנויות המקצועיות של הצוות";
+            context = "באמצעות פיתוח מקצועי מותאם, למידת עמיתים וליווי פרטני";
+            result = "להוביל לשינוי בפרקטיקות ההוראה ולשפר את הישגי התלמידים והאקלים הכיתתי";
+            vision = "צוות חינוכי בעל תחושת מסוגלות גבוהה, המאמין ביכולתו לקדם כל תלמיד ומצויד בכלים פדגוגיים עדכניים ורלוונטיים.";
+            suggestions.push({ title: "פיתוח ההון האנושי בצוות", action, subject, context, result, vision, rationale: `מתמקד בבניית ההון האנושי כמענה ישיר לגורם השורש: "${cause}"`, level: "פרט (צוות)" });
         }
 
         if (cultureKw || dataKw || visionKw) {
             action = "לבנות ולהטמיע";
-            subject = (cultureKw) ? "שגרות עבודה מקצועיות המקדמות שיתוף פעולה ולמידה" : (dataKw) ? "תהליכים מבוססי נתונים לקבלת החלטות" : "חזון ותפיסה פדגוגית משותפת";
-            context = "בכלל קהילת בית הספר";
-            result = "ליצור תרבות ארגונית של שיפור מתמיד ואחריות משותפת";
-            vision = "ארגון לומד, המקיים שיח מקצועי פתוח ומבוסס אמון, הפועל במשותף להשגת יעדים ברורים.";
-             suggestions.push({ title: "בניית תהליכים ותרבות ארגונית", action, subject, context, result, vision, rationale: `מטפל במבנים ובתהליכים המאפשרים את קיום ה-"${cause}"`, level: "מערכת (תהליכים)" });
+            subject = (cultureKw) ? "שגרות עבודה מקצועיות המקדמות תרבות של שיתוף פעולה, למידה ושיח מבוסס אמון" : 
+                      (dataKw) ? "תהליכים מבוססי נתונים לשיפור מתמיד של ההוראה והלמידה" : 
+                      "חזון ותפיסה פדגוגית בית ספרית משותפת ובהירה";
+            context = "בכלל קהילת בית הספר, תוך הובלה של צוות הניהול והצוותים המובילים";
+            result = "ליצור תרבות ארגונית של אחריות משותפת, שיפור מתמיד והתמקדות בהצלחת כלל התלמידים";
+            vision = "ארגון לומד ומתפתח, המקיים שיח מקצועי פתוח ומבוסס אמון, הפועל באופן שיטתי ומבוסס נתונים להשגת יעדים ברורים ומוסכמים.";
+             suggestions.push({ title: "חיזוק תהליכים ותרבות ארגונית", action, subject, context, result, vision, rationale: `מטפל במבנים, בתהליכים ובתרבות הארגונית המאפשרים את קיום גורם השורש: "${cause}"`, level: "מערכת (ארגון)" });
+        }
+        
+        if (resourcesKw || curriculumKw || causeLower.includes("הוראה לא מותאמת") || causeLower.includes("פערים") && !skillsKw) {
+            action = "לספק ולהתאים";
+            subject = (resourcesKw) ? "משאבים, זמן וכלים הולמים לצוות החינוכי" :
+                      (curriculumKw || causeLower.includes("הוראה לא מותאמת")) ? "אסטרטגיות הוראה דיפרנציאליות וחומרי למידה מותאמים" :
+                      "מענים מותאמים לצמצום פערים לימודיים וחברתיים";
+            context = "בהתאם לצרכים המזוהים של התלמידים והצוות, ובאופן גמיש ומתמשך";
+            result = "לאפשר לכל תלמיד למצות את הפוטנציאל שלו ולקדם שוויון הזדמנויות";
+            vision = "מערכת חינוכית המספקת מעטפת תומכת ומותאמת לכלל באיה, המאפשרת צמיחה והתפתחות אישית ואקדמית מיטבית.";
+            suggestions.push({ title: "התאמת משאבים ומענים", action, subject, context, result, vision, rationale: `מתמקד בהקצאה והתאמה של משאבים, כלים ומענים כמענה לגורם השורש: "${cause}"`, level: "מערכת (משאבים/תכנים)" });
         }
 
-        action = "להוביל שינוי תפיסתי ומעשי";
-        subject = `ההתמודדות עם "${cause}"`;
-        context = "באמצעות בניית תכנית התערבות מערכתית";
-        result = "לפתור את הבעיה מהשורש וליצור שיפור בר-קיימא";
-        vision = `בית ספר המתמודד באופן פרואקטיבי עם אתגריו העמוקים והופך אותם למנוף לצמיחה.`
-        suggestions.push({ title: "התמודדות מערכתית עם גורם השורש", action, subject, context, result, vision, rationale: `גישה מקיפה שמטרתה לתקוף את גורם השורש באופן ישיר דרך תוכנית פעולה ייעודית.`, level: "אסטרטגיה (התערבות)" });
 
-        return suggestions;
+        // הצעת ברירת מחדל אם לא זוהו מילות מפתח ספציפיות, או כהצעה נוספת
+        action = "להוביל שינוי מערכתי";
+        subject = `בהתמודדות עם האתגר של "${cause.length > 50 ? cause.substring(0, 47) + '...' : cause}"`;
+        context = "באמצעות בניית תכנית התערבות רב-שנתית, מבוססת נתונים ומשלבת את כלל הגורמים הרלוונטיים";
+        result = "לפתור את הבעיה מהשורש, ליצור שיפור משמעותי ובר-קיימא בתפקוד בית הספר ולהשפיע לטובה על כלל קהילת בית הספר";
+        vision = `בית ספר המתמודד באופן פרואקטיבי עם אתגריו העמוקים, הופך אותם למנוף לצמיחה ומקיים תרבות של שיפור מתמיד.`
+        suggestions.push({ title: "התמודדות מערכתית עם גורם השורש", action, subject, context, result, vision, rationale: `גישה מקיפה שמטרתה לתקוף את גורם השורש באופן ישיר דרך תוכנית פעולה ייעודית ומערכתית.`, level: "אסטרטגיה (התערבות)" });
+
+        return suggestions.slice(0,3); // הצג עד 3 הצעות לכל גורם שורש
     }
 
     function selectIssue(issueData) {
@@ -426,7 +529,7 @@
         document.getElementById('editSubject').value = finalIssue.subject;
         document.getElementById('editContext').value = finalIssue.context;
         document.getElementById('editResult').value = finalIssue.result;
-        document.getElementById('editVision').value = finalIssue.vision;
+        document.getElementById('editVision').value = finalIssue.vision || '';
         updateFinalIssue();
         moveToStep(3);
     }
@@ -443,7 +546,7 @@
         finalIssue.result = result;
         finalIssue.vision = document.getElementById('editVision').value;
         
-        document.getElementById('finalIssueText').innerHTML = `כיצד ניתן ל<strong>${action}</strong> את <strong>${subject}</strong> ב<strong>${context}</strong>, על מנת ל<strong>${result}</strong>?`;
+        document.getElementById('finalIssueText').innerHTML = `כיצד ניתן ל<strong>${action || "..."}</strong> את <strong>${subject || "..."}</strong> ב<strong>${context || "..."}</strong>, על מנת ל<strong>${result || "..."}</strong>?`;
     }
 
     function generateFinalReport() {
@@ -452,13 +555,13 @@
             <h2>מסמך הגדרת סוגייה מרכזית</h2>
             <hr><br>
             <h3>1. האתגר המרכזי שנותח</h3>
-            <p>${extractedData.challenge}</p>
+            <p>${extractedData.challenge || "לא זוהה אתגר מרכזי"}</p>
             <br>
             <h3>2. סיכום גורמי השורש</h3>
-            <ul>${extractedData.rootCauses.map(rc => `<li>${rc}</li>`).join('')}</ul>
+            <ul>${extractedData.rootCauses && extractedData.rootCauses.length > 0 ? extractedData.rootCauses.map(rc => `<li>${rc}</li>`).join('') : "<li>לא זוהו גורמי שורש</li>"}</ul>
             <br>
             <h3>3. הסוגייה המרכזית לפעולה</h3>
-            <p>${document.getElementById('finalIssueText').innerHTML}</p>
+            <p>${document.getElementById('finalIssueText').innerHTML || "לא הוגדרה סוגייה מרכזית."}</p>
             <br>
             <h3>4. חזון אסטרטגי</h3>
             <p>${finalIssue.vision || "לא הוגדר חזון."}</p>
@@ -467,20 +570,21 @@
 
     function downloadReport() {
         const reportContent = document.getElementById('finalReport').innerHTML;
+        const challengeForTitle = extractedData.challenge ? extractedData.challenge.replace(/[^\w\u0590-\u05FF\s]/g, '').replace(/\s+/g, '_') : "דוח_סוגייה";
         const fullHtml = `
             <!DOCTYPE html><html dir="rtl" lang="he">
-            <head><meta charset="UTF-8"><title>מסמך הגדרת סוגייה - ${extractedData.challenge}</title>
+            <head><meta charset="UTF-8"><title>מסמך הגדרת סוגייה - ${challengeForTitle}</title>
             <style>body{font-family:Arial,sans-serif;direction:rtl;line-height:1.6;margin:30px;}h2,h3{color:#2980b9;border-bottom:1px solid #ccc;padding-bottom:5px;}</style>
             </head><body>${reportContent}
             <div id="data-for-next-app" style="display:none;">
-              <span data-key="challenge">${extractedData.challenge}</span>
-              <span data-key="main_issue_question">${document.getElementById('finalIssueText').textContent}</span>
-              <span data-key="vision">${finalIssue.vision}</span>
+              <span data-key="challenge">${extractedData.challenge || ''}</span>
+              <span data-key="main_issue_question">${document.getElementById('finalIssueText').textContent || ''}</span>
+              <span data-key="vision">${finalIssue.vision || ''}</span>
             </div></body></html>`;
         const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = `הגדרת_סוגייה_${extractedData.challenge.replace(/\s+/g, '_')}.html`;
+        link.download = `הגדרת_סוגייה_${challengeForTitle}.html`;
         link.click();
         URL.revokeObjectURL(link.href);
         showMessage('success', 'הדוח הורד בהצלחה!');
@@ -489,11 +593,20 @@
     function startNew() {
         extractedData = {};
         finalIssue = {};
-        document.getElementById('fileInput').value = '';
         document.getElementById('dataSummary').style.display = 'none';
         document.getElementById('proceedToStep2').disabled = true;
+        
+        const fileUploadArea = document.getElementById('fileUploadAreaStep3');
+        if (fileUploadArea) {
+            fileUploadArea.removeEventListener('click', triggerFileUploadStep3); 
+            fileUploadArea.addEventListener('click', triggerFileUploadStep3);
+        }
         moveToStep(1);
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        startNew(); 
+    });
 </script>
 </body>
 </html>
