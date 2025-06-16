@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תפיסת "יסודי עכשווי" - הצגה אינטראקטיבית</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #2c3e50;
+            min-height: 100vh;
+            direction: rtl;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 1.2em;
+            color: #5d6d7e;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .header h2 {
+            font-size: 1.4em;
+            color: #85929e;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .header .main-title {
+            font-size: 2.5em;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header .subtitle {
+            color: #7f8c8d;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: 15px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            color: #5d6d7e;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background: #a8b8d8;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 18px rgba(168, 184, 216, 0.3);
+        }
+
+        .content-section {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.6s ease-in;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-title {
+            font-size: 2.2em;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 100px;
+            height: 3px;
+            background: #a8b8d8;
+            margin: 15px auto;
+            border-radius: 2px;
+        }
+
+        .vision-content {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .agency-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .agency-card {
+            background: linear-gradient(135deg, #d4c5f9, #b8a9dc);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .agency-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .agency-card h3 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+
+        .three-pillars {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .pillar {
+            background: linear-gradient(135deg, #87ceeb, #5f9ea0);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+        }
+
+        .pillar:hover {
+            transform: scale(1.05);
+        }
+
+        .implementation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .implementation-card {
+            background: linear-gradient(135deg, #90c695, #7ab87f);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+        }
+
+        .implementation-card h3 {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            border-bottom: 2px solid rgba(255,255,255,0.4);
+            padding-bottom: 10px;
+            font-weight: 700;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .implementation-card .bullet-list li {
+            background: rgba(255, 255, 255, 0.2);
+            border-right: 3px solid rgba(255, 255, 255, 0.6);
+            font-weight: 600;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.2);
+        }
+
+        .implementation-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .implementation-card h3 {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            padding-bottom: 10px;
+        }
+
+        .bullet-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .bullet-list li {
+            padding: 8px 0;
+            border-right: 3px solid #a8b8d8;
+            padding-right: 15px;
+            margin-bottom: 10px;
+            background: rgba(168, 184, 216, 0.15);
+            border-radius: 5px;
+            padding: 12px 15px;
+        }
+
+        .ecosystem-values {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .value-card {
+            background: linear-gradient(135deg, #d2b7e5, #c9a96e);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+        }
+
+        .value-card:hover {
+            transform: rotate(2deg) scale(1.05);
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #f5b7b1, #f1948a);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .highlight-text {
+            font-size: 1.2em;
+            line-height: 1.6;
+            color: #2c3e50;
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(168, 184, 216, 0.15);
+            border-radius: 10px;
+            border-right: 4px solid #a8b8d8;
+        }
+
+        .interactive-element {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .interactive-element:hover {
+            transform: scale(1.02);
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .header .main-title {
+                font-size: 2em;
+            }
+            
+            .navigation {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .nav-btn {
+                width: 80%;
+                max-width: 300px;
+            }
+            
+            .content-section {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>המינהל הפדגוגי</h1>
+        <h2>האגף לחינוך יסודי</h2>
+        <div class="main-title">תפיסת "יסודי עכשווי"</div>
+        <div class="subtitle">חינוך יסודי רלוונטי, הוגן ומוכוון עתיד</div>
+    </div>
+
+    <div class="container">
+        <div class="navigation">
+            <button class="nav-btn active" onclick="showSection('vision')">החזון המרכזי</button>
+            <button class="nav-btn" onclick="showSection('pillars')">שלושה צירי פיתוח</button>
+            <button class="nav-btn" onclick="showSection('headquarters')">דרכי פעולה - מטה</button>
+            <button class="nav-btn" onclick="showSection('schools')">דרכי פעולה - בתי ספר</button>
+            <button class="nav-btn" onclick="showSection('ecosystem')">אקוסיסטם מאפשר</button>
+            <button class="nav-btn" onclick="showSection('summary')">סיכום והמלצות</button>
+        </div>
+
+        <!-- החזון המרכזי -->
+        <div id="vision" class="content-section active">
+            <h2 class="section-title">החזון המרכזי: פעלנות ופעלנות שיתופית</h2>
+            
+            <div class="highlight-text">
+                מטרת העל של החינוך היסודי היא הצמחת לומדים פעלנים ופעלנים שיתופיים - 
+                תלמידים בעלי תחושת מסוגלות ויכולת השפעה על עצמם ועל החברה
+            </div>
+
+            <div class="agency-cards">
+                <div class="agency-card interactive-element">
+                    <h3>פעלנות (Agency)</h3>
+                    <p>יכולת הלומד לפעול מתוך תחושת מסוגלות, בחירה ואחריות על תהליך הלמידה שלו באופן עצמאי ואקטיבי</p>
+                </div>
+                <div class="agency-card interactive-element">
+                    <h3>פעלנות שיתופית (Co-Agency)</h3>
+                    <p>יכולת הפעולה במשותף עם אחרים, מתוך אחריות הדדית ושותפות פעילה</p>
+                </div>
+            </div>
+
+            <div class="highlight-text">
+                <strong>הרציונל:</strong> בעידן של שינויים מהירים וטכנולוגיות מתקדמות, לא מספיק ללמד תכנים קבועים - 
+                יש לפתח יכולות התמודדות עם אתגרים לא צפויים, יוזמה אישית וחברתית, 
+                ויכולת לעצב את המציאות ולא רק להגיב אליה
+            </div>
+        </div>
+
+        <!-- שלושה צירי פיתוח -->
+        <div id="pillars" class="content-section">
+            <h2 class="section-title">שלושה צירי פיתוח מתואמים</h2>
+            
+            <div class="three-pillars">
+                <div class="pillar interactive-element">
+                    <h3>1. העמקה ופיתוח מקצועי</h3>
+                    <p>השקעה בהכשרת צוותי החינוך ופיתוח יכולותיהם המקצועיות והפדגוגיות</p>
+                </div>
+                <div class="pillar interactive-element">
+                    <h3>2. התאמות מערכתיות מבוססות צורך</h3>
+                    <p>שינויים ארגוניים ומבניים המאפשרים יישום התפיסה החדשה</p>
+                </div>
+                <div class="pillar interactive-element">
+                    <h3>3. פיתוח תשתיות, משאבים וכלים לפדגוגיה מתקדמת</h3>
+                    <p>יצירת תשתיות דיגיטליות, כלים טכנולוגיים ומשאבי הכשרה הנדרשים ליישום גישות הלמידה החדשות</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- דרכי פעולה ברמת המטה -->
+        <div id="headquarters" class="content-section">
+            <h2 class="section-title">דרכי פעולה ברמת המטה - תמיכה מערכתית</h2>
+            
+            <div class="implementation-grid">
+                <div class="implementation-card interactive-element">
+                    <h3>אסדרות מערכתיות</h3>
+                    <ul class="bullet-list">
+                        <li>התאמת ארגון הלמידה - מודלים גמישים לזמן ומרחב</li>
+                        <li>אסדרת זמן מורה - "זמן מוגן" לפיתוח מקצועי</li>
+                        <li>למידה חוץ בית ספרית - הנחיות ונהלים</li>
+                        <li>תפקיד הרכז הפדגוגי - מוביל שינוי בית ספרי</li>
+                    </ul>
+                </div>
+                
+                <div class="implementation-card interactive-element">
+                    <h3>שותפויות אסטרטגיות</h3>
+                    <ul class="bullet-list">
+                        <li>שיתוף פעולה עם מחוזות ורשויות</li>
+                        <li>קשרי עבודה עם מוסדות אקדמיים</li>
+                        <li>שותפות עם המגזר השלישי</li>
+                        <li>רשת למידה מקצועית של בתי ספר</li>
+                    </ul>
+                </div>
+                
+                <div class="implementation-card interactive-element">
+                    <h3>פיתוח מקצועי מתמשך</h3>
+                    <ul class="bullet-list">
+                        <li>הכשרת רכזים פדגוגיים</li>
+                        <li>הכשרת מנהלים להובלה פדגוגית</li>
+                        <li>קהילה לומדת ארצית</li>
+                        <li>מנטורינג הדדי ותמיכת עמיתים</li>
+                    </ul>
+                </div>
+                
+                <div class="implementation-card interactive-element">
+                    <h3>פיתוח תשתיות, משאבים וכלים</h3>
+                    <ul class="bullet-list">
+                        <li>תשתיות דיגיטליות וטכנולוגיות מערכתיות</li>
+                        <li>כלים וסטנדרטים מערכתיים להערכה ומעקב</li>
+                        <li>משאבי הכשרה ופיתוח מקצועי</li>
+                        <li>פלטפורמות שיתופיות לקהילות למידה</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- דרכי פעולה ברמת בית הספר -->
+        <div id="schools" class="content-section">
+            <h2 class="section-title">דרכי פעולה ברמת בית הספר</h2>
+            
+            <div class="implementation-grid">
+                <div class="implementation-card interactive-element">
+                    <h3>מנהיגות פדגוגית</h3>
+                    <ul class="bullet-list">
+                        <li>מיקוד תפקיד הרכז הפדגוגי להובלת שינוי</li>
+                        <li>הקמת צוות מו"פ בית ספרי</li>
+                        <li>התחלה עם 3-4 מורים מעוניינים</li>
+                        <li>הרחבת הצוות המוביל בשלבים</li>
+                    </ul>
+                </div>
+                
+                <div class="implementation-card interactive-element">
+                    <h3>פיתוח מקצועי והדרכה</h3>
+                    <ul class="bullet-list">
+                        <li>השתלמויות ייעודיות</li>
+                        <li>הדרכות ברמה ארצית ומחוזית</li>
+                        <li>קהילות לומדות מקצועיות</li>
+                        <li>למידת עמיתים</li>
+                    </ul>
+                </div>
+                
+                <div class="implementation-card interactive-element">
+                    <h3>הובלת שינוי בית ספרי</h3>
+                    <ul class="bullet-list">
+                        <li>גיבוש פרקטיקות ללמידה מבוססת מיומנויות</li>
+                        <li>שילוב למידה במרחבים שונים</li>
+                        <li>התנסות בפרויקט בינתחומי</li>
+                        <li>הרחבה הדרגתית</li>
+                    </ul>
+                </div>
+                
+                <div class="implementation-card interactive-element">
+                    <h3>הכלה ושיתוף קהילה</h3>
+                    <ul class="bullet-list">
+                        <li>שיתוף ההורים בתהליכי השינוי</li>
+                        <li>תהליכי שיתוף בהבנת התפיסה</li>
+                        <li>טיפוח אקלים תומך הוגנות</li>
+                        <li>מעורבות קהילתית</li>
+                    </ul>
+                </div>
+                
+                <div class="implementation-card interactive-element">
+                    <h3>פיתוח ויישום תשתיות ומשאבים</h3>
+                    <ul class="bullet-list">
+                        <li>עיצוב מרחבי למידה חדשניים ומותאמים</li>
+                        <li>פיתוח תכנים ופרויקטים מקומיים</li>
+                        <li>יישום כלי ניהול וליווי אישי</li>
+                        <li>התאמת טכנולוגיות לצרכים מקומיים</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- אקוסיסטם מאפשר -->
+        <div id="ecosystem" class="content-section">
+            <h2 class="section-title">אקוסיסטם הוגן ומאפשר</h2>
+            
+            <div class="highlight-text">
+                מעטפת מערכתית המבוססת על ערכי הוגנות ומספקת את התשתיות, 
+                המשאבים, האוטונומיה והתמיכה הנדרשים למימוש השינוי
+            </div>
+
+            <h3 style="text-align: center; margin: 30px 0; color: #2c3e50; font-size: 1.5em;">ערכי ההוגנות המערכתית</h3>
+            
+            <div class="ecosystem-values">
+                <div class="value-card interactive-element">
+                    <h4>אכפתיות</h4>
+                    <p>בסיס ליחסים מיטיבים ודאגה לצורכי כלל התלמידים והצוותים</p>
+                </div>
+                <div class="value-card interactive-element">
+                    <h4>שקיפות</h4>
+                    <p>בפעולות ובקבלת החלטות</p>
+                </div>
+                <div class="value-card interactive-element">
+                    <h4>מגוון</h4>
+                    <p>המאפשר ביטוי למנעד תרבותי, חברתי ואישי</p>
+                </div>
+                <div class="value-card interactive-element">
+                    <h4>איכות</h4>
+                    <p>המבטיחה סטנדרטים גבוהים בלמידה ובהוראה</p>
+                </div>
+                <div class="value-card interactive-element">
+                    <h4>גמישות</h4>
+                    <p>המאפשרת התאמה לצרכים המשתנים</p>
+                </div>
+                <div class="value-card interactive-element">
+                    <h4>נגישות</h4>
+                    <p>המבטיחה הזדמנויות שוות לכל תלמיד</p>
+                </div>
+                <div class="value-card interactive-element">
+                    <h4>אמון</h4>
+                    <p>המחזק את תחושת השייכות והביטחון</p>
+                </div>
+            </div>
+
+            <div class="implementation-grid" style="margin-top: 40px;">
+                <div class="implementation-card interactive-element">
+                    <h3>חלוקה צודקת של משאבים</h3>
+                    <ul class="bullet-list">
+                        <li>תקצוב דיפרנציאלי מותאם לצרכים</li>
+                        <li>הקצאת משאבים ייעודיים ליישום התפיסה</li>
+                    </ul>
+                </div>
+                
+                <div class="implementation-card interactive-element">
+                    <h3>גמישות פדגוגית וארגונית</h3>
+                    <ul class="bullet-list">
+                        <li>התאמת תוכנית הלימודים לצרכי הקהילה</li>
+                        <li>גמישות בתכנים ובדרכי הערכה</li>
+                        <li>הכרה בתעודות הערכה חלופיות</li>
+                    </ul>
+                </div>
+                
+                <div class="implementation-card interactive-element">
+                    <h3>תמיכה מקצועית</h3>
+                    <ul class="bullet-list">
+                        <li>קהילות למידה מקצועיות למורים</li>
+                        <li>ליווי ותמיכה של מפקחים ומדריכים</li>
+                        <li>תהליכי פיתוח מקצועי מתמשכים</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- סיכום והמלצות -->
+        <div id="summary" class="content-section">
+            <h2 class="section-title">סיכום והמלצות ליישום</h2>
+            
+            <div class="highlight-text">
+                הצלחתה של תפיסת "יסודי עכשווי" תלויה במאמץ משולב של כלל הגורמים במערכת החינוך. 
+                שילוב ממוקד של שלושת צירי הפיתוח המתואמים יוביל ללמידה בעלת משמעות אישית וחברתית, 
+                ויפתח את יכולות הלומדים להתמודד עם אתגרי ההווה והעתיד
+            </div>
+
+            <div class="summary-grid">
+                <div class="summary-card interactive-element">
+                    <h3>עקרונות המהלך המוצע</h3>
+                    <ul class="bullet-list">
+                        <li>גישה מדורגת ומבוקרת שבונה על החוזקות הקיימות</li>
+                        <li>השקעה מתמשכת בפיתוח מקצועי של כלל הגורמים החינוכיים</li>
+                        <li>יצירת מעטפת תומכת ברמה המערכתית והקהילתית</li>
+                        <li>גמישות וחדשנות מבוקרת תוך שמירה על איכות החינוך</li>
+                    </ul>
+                </div>
+                
+                <div class="summary-card interactive-element">
+                    <h3>המסר המסכם</h3>
+                    <p style="font-size: 1.1em; line-height: 1.6;">
+                        התפיסה מציעה מסלול ברור ומעשי למעבר מחינוך מסורתי לחינוך המותאם לאתגרי המאה ה-21, 
+                        תוך שמירה על הערכים החינוכיים המרכזיים ופיתוח יכולות חדשות הנדרשות לדור העתיד.
+                    </p>
+                    <p style="margin-top: 15px; font-weight: bold; font-size: 1.2em;">
+                        הזמן לפעולה הוא עכשיו!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            // הסתרת כל הסעיפים
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // הסרת active מכל הכפתורים
+            const buttons = document.querySelectorAll('.nav-btn');
+            buttons.forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // הצגת הסעיף הנבחר
+            document.getElementById(sectionId).classList.add('active');
+            
+            // הוספת active לכפתור הנבחר
+            event.target.classList.add('active');
+        }
+
+        // הוספת אנימציות לאלמנטים אינטראקטיביים
+        document.addEventListener('DOMContentLoaded', function() {
+            const interactiveElements = document.querySelectorAll('.interactive-element');
+            
+            interactiveElements.forEach(element => {
+                element.addEventListener('click', function() {
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
