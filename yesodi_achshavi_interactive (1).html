@@ -191,41 +191,37 @@
             margin-top: 30px;
         }
 
+        /* === GREEN CARDS - STYLE UPDATED === */
         .implementation-card {
-            background: linear-gradient(135deg, #90c695, #7ab87f);
-            color: white;
+            background: #ffffff;
+            border: 3px solid #7ab87f; /* Green Frame */
+            color: #2c3e50; /* Dark Text */
             padding: 25px;
             border-radius: 15px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.08);
             transition: transform 0.3s ease;
         }
 
+        .implementation-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(122, 184, 127, 0.3);
+        }
+
         .implementation-card h3 {
             font-size: 1.3em;
             margin-bottom: 15px;
-            border-bottom: 2px solid rgba(255,255,255,0.4);
+            border-bottom: 2px solid #90c695; /* Green underline */
             padding-bottom: 10px;
             font-weight: 700;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
         }
 
         .implementation-card .bullet-list li {
-            background: rgba(255, 255, 255, 0.2);
-            border-right: 3px solid rgba(255, 255, 255, 0.6);
+            background: rgba(122, 184, 127, 0.1); /* Light green background */
+            border-right: 3px solid #7ab87f; /* Green side border */
             font-weight: 600;
-            text-shadow: 1px 1px 1px rgba(0,0,0,0.2);
         }
+        /* === END OF GREEN CARD UPDATE === */
 
-        .implementation-card:hover {
-            transform: translateY(-3px);
-        }
-
-        .implementation-card h3 {
-            font-size: 1.3em;
-            margin-bottom: 15px;
-            border-bottom: 2px solid rgba(255,255,255,0.3);
-            padding-bottom: 10px;
-        }
 
         .bullet-list {
             list-style: none;
@@ -233,13 +229,11 @@
         }
 
         .bullet-list li {
-            padding: 8px 0;
-            border-right: 3px solid #a8b8d8;
-            padding-right: 15px;
+            padding: 12px 15px;
             margin-bottom: 10px;
             background: rgba(168, 184, 216, 0.15);
             border-radius: 5px;
-            padding: 12px 15px;
+            border-right: 3px solid #a8b8d8;
         }
 
         .ecosystem-values {
@@ -289,6 +283,36 @@
             border-radius: 10px;
             border-right: 4px solid #a8b8d8;
         }
+
+        /* === NEW SECTION FOR UNIQUENESS TEXT === */
+        .uniqueness-section {
+            margin-top: 40px;
+            padding: 25px;
+            background: rgba(236, 239, 241, 0.5);
+            border-radius: 10px;
+        }
+        .uniqueness-section h3 {
+            text-align: center;
+            font-size: 1.7em;
+            color: #34495e;
+            margin-bottom: 25px;
+            position: relative;
+        }
+        .uniqueness-section h3::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 3px;
+            background-color: #b8a9dc;
+            margin: 10px auto 0;
+        }
+        .uniqueness-section p {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #34495e;
+            margin-bottom: 15px;
+        }
+        /* === END OF NEW SECTION STYLE === */
 
         .interactive-element {
             cursor: pointer;
@@ -342,7 +366,7 @@
             <button class="nav-btn" onclick="showSection('summary')">סיכום והמלצות</button>
         </div>
 
-        <!-- החזון המרכזי -->
+        <!-- החזון המרכזי - UPDATED -->
         <div id="vision" class="content-section active">
             <h2 class="section-title">החזון המרכזי: פעלנות ופעלנות שיתופית</h2>
             
@@ -362,11 +386,17 @@
                 </div>
             </div>
 
-            <div class="highlight-text">
-                <strong>הרציונל:</strong> בעידן של שינויים מהירים וטכנולוגיות מתקדמות, לא מספיק ללמד תכנים קבועים - 
-                יש לפתח יכולות התמודדות עם אתגרים לא צפויים, יוזמה אישית וחברתית, 
-                ויכולת לעצב את המציאות ולא רק להגיב אליה
+            <!-- === NEW CONTENT BLOCK === -->
+            <div class="uniqueness-section">
+                <h3>הבשורה הייחודית של "יסודי עכשווי"</h3>
+                <p>תפיסת "יסודי עכשווי" מביאה בשורה חדשנית באמצעות יצירת מארג חינוכי דינמי ומשולב המתאפיין ביחסי גומלין מורכבים בין כל רכיביו. ייחודיותה אינה בהמצאת רעיונות חינוכיים חדשים, אלא באופן שבו היא יוצרת מערכת אקולוגית שלמה וקוהרנטית, שבה הרכיבים השונים - המציאות המשתנה, מאפייני הגיל והדור, הסביבה והקהילה, גישות הלמידה, דרכי הפעולה והמעטפת הארגונית - פועלים בהרמוניה ומשפיעים הדדית זה על זה.</p>
+                <p>החידוש המשמעותי בתפיסה הוא במיצוב הפעלנות (agency) והפעלנות השיתופית (co-agency) כמטרות מרכזיות וברורות של התהליך החינוכי. התפיסה מפתחת באופן שיטתי ומובנה את יכולת התלמידים לפעול כסוכני שינוי המשפיעים על עיצוב המציאות שלהם, לא רק כיחידים אלא גם כקולקטיב.</p>
+                <p>מבנה ארגוני גמיש ומסתגל מהווה רכיב מפתח בתפיסה כ"אקוסיסטם הוגן ומאפשר" הכולל חלוקה צודקת של משאבים, גמישות פדגוגית וארגונית, תמיכה מקצועית בצוותי חינוך, ותרבות של אמון ושיתוף פעולה. מבנה זה אינו רק תשתית תומכת אלא חלק אינטגרלי מהתפיסה החינוכית, המאפשר את מימוש הגישות החדשניות בשטח.</p>
+                <p>יחסי הגומלין המורכבים בין רכיבי המודל יוצרים מערכת מעגלית שבה כל רכיב משפיע ומושפע: המציאות המשתנה מעצבת את גישות הלמידה, אלו מובילות לדרכי פעולה חדשניות, שבתורן דורשות מעטפת ארגונית תומכת, וכל אלה יחד מקדמים את השגת המטרה - פיתוח פעלנות אישית ושיתופית. מערכת זו של השפעות הדדיות יוצרת מענה חינוכי דינמי המסוגל להסתגל לשינויים ולהתפתח באופן אורגני.</p>
+                <p>"יסודי עכשווי" מספקת מענה חינוכי רלוונטי והוליסטי המכין את התלמידים להתמודדות מוצלחת עם אתגרי המציאות המורכבת והמשתנה, תוך טיפוח זהותם האישית והקולקטיבית והפיכתם לאזרחים בעלי תחושת מסוגלות והשפעה על החברה. זוהי תפיסה שלמה המציעה לא רק חזון חינוכי, אלא גם את הדרך המעשית והמאוזנת ליישומו בשטח.</p>
             </div>
+            <!-- === END OF NEW CONTENT BLOCK === -->
+
         </div>
 
         <!-- שלושה צירי פיתוח -->
