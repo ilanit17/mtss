@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תיאוריית השינוי – יסודי עכשווי</title>
+    <style>
+        :root {
+            --main-bg-start: #f5f7fa;
+            --main-bg-end: #c3cfe2;
+            --text-dark: #2c3e50;
+            --text-medium: #34495e;
+            --text-light: #7f8c8d;
+            --accent-color: #5d9cec; /* A slightly more vibrant blue */
+            --accent-color-dark: #3b5998;
+            --card-bg: rgba(255, 255, 255, 0.97);
+            --green-frame: #7ab87f;
+            --purple-frame: #b8a9dc;
+            --orange-frame: #ffab73;
+            --red-frame: #ff7675;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--main-bg-start) 0%, var(--main-bg-end) 100%);
+            color: var(--text-dark);
+            min-height: 100vh;
+            direction: rtl;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .header .main-title {
+            font-size: 2.5em;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header .subtitle {
+            color: var(--text-light);
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: var(--card-bg);
+            border: none;
+            padding: 15px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--text-medium);
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background: var(--accent-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 18px rgba(93, 156, 236, 0.4);
+        }
+
+        .content-section {
+            display: none;
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.6s ease-in;
+        }
+
+        .content-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .section-title {
+            font-size: 2.4em;
+            color: var(--text-dark);
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+        }
+        .section-title::after {
+            content: ''; display: block; width: 100px; height: 4px;
+            background: var(--accent-color); margin: 15px auto; border-radius: 2px;
+        }
+
+        .sub-section-title {
+            text-align: center; font-size: 1.8em; color: var(--text-medium);
+            margin-top: 50px; margin-bottom: 25px; position: relative;
+        }
+        .sub-section-title::after {
+            content: ''; display: block; width: 80px; height: 3px;
+            background-color: var(--purple-frame); margin: 10px auto 0;
+        }
+        
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .info-card {
+            background: #ffffff;
+            border-right: 5px solid var(--accent-color);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.07);
+        }
+        .info-card h4 { font-size: 1.4em; margin-bottom: 15px; color: var(--accent-color-dark); }
+        .info-card p { line-height: 1.7; font-size: 1.1em; }
+
+        .bullet-list { list-style: none; padding: 0; }
+        .bullet-list li {
+            padding: 10px 15px 10px 0; margin-bottom: 8px; background: rgba(93, 156, 236, 0.08);
+            border-radius: 5px; position: relative; padding-right: 35px; line-height: 1.6;
+        }
+        .bullet-list li::before {
+            content: '•'; position: absolute; right: 15px; top: 10px;
+            color: var(--accent-color); font-weight: bold; font-size: 1.2em;
+        }
+
+        /* --- LOGICAL MODEL FLOW STYLES --- */
+        .logical-model-container { text-align: center; }
+        .theory-element {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 10px;
+            vertical-align: middle;
+        }
+        .theory-box {
+            background: white; border: 1px solid #ddd; border-radius: 10px;
+            padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            min-width: 250px; text-align: center;
+        }
+        .theory-box h4 { font-size: 1.3em; margin-bottom: 10px; color: var(--text-dark); }
+        .theory-box p { font-size: 1em; color: var(--text-medium); line-height: 1.5; }
+        .theory-operator {
+            font-size: 2.5em; color: var(--accent-color-dark);
+            margin: 0 20px; display: inline-flex; vertical-align: middle;
+        }
+
+        /* --- SCHEDULE TABLE STYLES --- */
+        .schedule-table-container {
+            overflow-x: auto;
+            margin-top: 30px;
+        }
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+        .schedule-table th, .schedule-table td {
+            border: 1px solid #dcdde1;
+            padding: 15px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .schedule-table th {
+            background-color: var(--accent-color-dark);
+            color: white;
+            font-size: 1.2em;
+        }
+        .schedule-table td {
+            background-color: #fdfdfd;
+            height: 100px;
+        }
+        .schedule-table .time-slot {
+            font-weight: bold;
+            background-color: #f1f2f6;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="main-title">תיאוריית השינוי – יסודי עכשווי</div>
+        <div class="subtitle">מודל לוגי ותכנית פעולה</div>
+    </div>
+
+    <div class="container">
+        <div class="navigation">
+            <button class="nav-btn active" onclick="showSection('logical-model')">המודל הלוגי</button>
+            <button class="nav-btn" onclick="showSection('model-in-action')">המודל בפעולה</button>
+        </div>
+
+        <!-- The Logical Model Section -->
+        <div id="logical-model" class="content-section active">
+            <h2 class="section-title">המודל הלוגי להטמעת התפיסה</h2>
+            
+            <div class="grid-container">
+                <div class="info-card">
+                    <h4>💡 הרקע לפיתוח המהלך</h4>
+                    <ul class="bullet-list">
+                        <li><b>מציאות משתנה (VUCA):</b> עולם תנודתי, לא צפוי, מורכב ועמום – מחייב חינוך המותאם להתמודדות עם אתגרי ההווה והעתיד.</li>
+                        <li><b>שינויים גלובליים:</b> בינה מלאכותית, קיטוב חברתי וגיוון תרבותי – מחייבים התאמת המיומנויות הנדרשות לתלמידים.</li>
+                        <li><b>אירועים משבריים (קורונה, "חרבות ברזל"):</b> הדגישו את הצורך בפיתוח חוסן ומיומנויות להתנהלות במציאות משתנה.</li>
+                        <li><b>הצורך בהתאמה לגיל היסודי:</b> תהליכי הלמידה בגילאי היסודי צריכים להיות מותאמים להתפתחות הילדים ולעולמם האישי ולעורר סקרנות, פעלנות, ויצירת משמעות.</li>
+                        <li><b>עשייה מצומצמת ולא מערכתית:</b> העיסוק בגישות הלמידה החדשניות מתרחש בעיקר כיוזמות נקודתיות.</li>
+                        <li><b>פערים בהישגים לימודיים.</b></li>
+                    </ul>
+                </div>
+                <div class="info-card">
+                    <h4>🎯 מטרת העל</h4>
+                    <p>התאמת מערכת החינוך היסודי למציאות המשתנה כך שתוכל להתמודד עם אתגרי ההווה והעתיד, באמצעות מסגרת מארגנת הוליסטית הכוללת תפיסה פדגוגית וארגונית, מנגנונים, תשתיות, אסדרות.</p>
+                </div>
+            </div>
+
+            <div class="sub-section-title">⚙️ תיאוריית השינוי (מבט-על)</div>
+            <div class="logical-model-container">
+                 <div class="theory-element"><div class="theory-box"><h4>תהליכי פיתוח מקצועי מתמשכים</h4><p>למורים, מדריכים, מנהלים ומפקחים</p></div></div>
+                <div class="theory-operator">+</div>
+                <div class="theory-element"><div class="theory-box"><h4>אסדרות מערכתיות</h4></div></div>
+                <div class="theory-operator">יקדמו ←</div>
+                <div class="theory-element"><div class="theory-box"><h4>יישום פרקטיקות פדגוגיות חדשניות</h4><p>מבוססות מיומנויות והוגנות, תואמות גיל ודור.</p></div></div>
+                <div class="theory-operator">יבטיחו ←</div>
+                <div class="theory-element"><div class="theory-box"><h4>פיתוח מיומנויות וקידום Agency ו-Co-agency</h4></div></div>
+                 <div class="theory-operator">→</div>
+                 <div class="theory-element"><div class="theory-box" style="border-color: var(--accent-color); border-width: 2px;"><h4>שגשוג בעולם משתנה</h4><p>רכישת כישורי התמודדות</p></div></div>
+            </div>
+
+            <div class="sub-section-title">פירוט רכיבי המודל הלוגי</div>
+            <div class="grid-container">
+                <div class="info-card">
+                    <h4>1. תשומות (שנים 2025-2028)</h4>
+                    <ul class="bullet-list">
+                        <li><b>משאבי אנוש:</b> 14 מדריכות ארציות, רכזים פדגוגיים בבתי הספר, צוותי מו"פ בית-ספריים, מפקחים ומנהלים.</li>
+                        <li><b>משאבים כלכליים:</b> תקצוב דיפרנציאלי, שעות פיתוח מקצועי, כלים טכנולוגיים.</li>
+                        <li><b>תשתיות:</b> מרכזי פסגה, כלי הערכה ומעקב, פלטפורמות AI להדרכה.</li>
+                    </ul>
+                </div>
+                 <div class="info-card">
+                    <h4>2. פעילויות מרכזיות</h4>
+                    <ul class="bullet-list">
+                        <li><b>ברמת המטה:</b> תהליכי פיתוח מקצועי, אסדרות מערכתיות (זמן מורה, למידה חוץ בית-ספרית), שותפויות, כלי מדידה ומעקב.</li>
+                        <li><b>ברמת בית הספר:</b> מנהיגות פדגוגית (רכז, צוות מוביל), הובלת שינוי (פרקטיקות, מרחבים), הכלה וקהילה (שיתוף הורים).</li>
+                    </ul>
+                </div>
+                 <div class="info-card">
+                    <h4>3. תפוקות צפויות (2025-2028)</h4>
+                    <ul class="bullet-list">
+                        <li>150 בתי ספר מיישמים את התפיסה.</li>
+                        <li>150 רכזים פדגוגיים מוכשרים.</li>
+                        <li>מסמך מדיניות מקיף מפותח ומיושם.</li>
+                        <li>תו תקן "יסודי עכשווי" פעיל.</li>
+                        <li>רשת קהילתית של בתי ספר מדגימים.</li>
+                        <li>כלי הערכה חדשניים פועלים בשטח.</li>
+                    </ul>
+                </div>
+                 <div class="info-card">
+                    <h4>4. תוצאות לפי טווחים</h4>
+                    <ul class="bullet-list">
+                        <li><b>טווח קצר (1-2 שנים):</b> מורים מפתחים פרקטיקות חדשניות, עלייה במוטיבציית תלמידים, הורים מעורבים.</li>
+                        <li><b>טווח בינוני (2-3 שנים):</b> שיפור במדדי Agency ו-Co-Agency, עלייה במיומנויות חברתיות-רגשיות.</li>
+                        <li><b>טווח ארוך (3+ שנים):</b> שיפור במדדי PISA ו-PIRLS, צמצום פערים, בוגרים מוכנים לאתגרי המאה ה-21.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- The Model in Action Section -->
+        <div id="model-in-action" class="content-section">
+            <h2 class="section-title">המודל בפעולה: מה נראה בשטח?</h2>
+            
+            <div class="sub-section-title">👨‍🎓 יום לימודים מזווית התלמיד.ה: חוויה דינמית ומעוררת סקרנות</div>
+            <div class="info-card">
+                <p><b>בוקר של גילוי:</b> התחלה עם שיעור קצר המציג אתגר או שאלה מסקרנת, המובילה ללמידה חקרנית. <br><b>למידה פעילה במרחבים מגוונים:</b> מעבר בין כיתות שונות, סדנאות יצירה, מעבדות (כמו STEM), מרחבי חוץ וסביבות קהילתיות. <br><b>בחירה ואוטונומיה:</b> יכולת לבחור נושאי למידה, פרויקטים או דרכי חקר בהתאם לתחומי עניין אישיים. <br><b>שיתוף פעולה עם חברים:</b> עבודה בקבוצות על פרויקטים משותפים, למידת עמיתים, ופתרון בעיות ביחד. <br><b>שימוש בכלים טכנולוגיים:</b> למידה באמצעות טאבלטים, מחשבים, וכלים של בינה מלאכותית המסייעים בהתאמה אישית ובהעמקה. <br><b>רפלקציה והתפתחות:</b> זמן קבוע להתבוננות על תהליכי הלמידה, הצבת מטרות אישיות והבנת ההתקדמות. <br><b>קשר עם הקהילה:</b> יציאה ללמידה בסביבה הקרובה, מעורבות בפרויקטים קהילתיים וחיבור לאתגרי העולם האמיתי.</p>
+                <p style="text-align: center; font-weight: bold; margin-top: 20px;">"יש לי מקום להשמיע, לבחור וליצור – אני חלק ממשהו גדול יותר"</p>
+            </div>
+
+            <div class="sub-section-title">👩‍🏫 יום לימודים מזווית המורה: מנהיג.ה פדגוגי.ת, מנחה ומעורר.ת השראה</div>
+            <div class="info-card">
+                 <p><b>תכנון למידה מותאמת:</b> הכנת שיעורים ופרויקטים המשלבים מגוון דרכי הוראה, בהתאם לצרכים הייחודיים של כל תלמיד. <br><b>הנחיה וליווי אישי:</b> תפקיד המורה עובר מהוראה פרונטלית להנחיה, מתן משוב אישי ותמיכה בתהליכי חקר ובחירה של התלמידים. <br><b>פיתוח מקצועי מתמשך:</b> השתתפות בהשתלמויות ייעודיות, סדנאות וקהילות למידה עם עמיתים, כולל שימוש בכלי בינה מלאכותית לפיתוח פדגוגי. <br><b>עבודת צוות שיתופית:</b> שיתוף פעולה הדוק עם צוותי מורים נוספים בבית הספר, רכזים פדגוגיים ומדריכים, לבניית פרקטיקות הוראה חדשניות. <br><b>שימוש בכלי הערכה רפלקטיביים:</b> יישום כלים חדשניים להערכה, המאפשרים למורים לקבל תמונה הוליסטית על התקדמות התלמידים ולתכנן את המשך הלמידה. <br><b>הובלת שינוי בית ספרי:</b> מעורבות פעילה בגיבוש פרקטיקות הוראה חדשניות, הטמעת התפיסה ביום-יום בית הספר ושיתוף הורים בשינוי. <br><b>גמישות והסתגלות:</b> התמודדות עם שינויים והתאמת דרכי ההוראה למציאות דינמית, תוך חיפוש מתמיד אחר דרכים יצירתיות לקידום למידה משמעותית.</p>
+            </div>
+            
+            <div class="sub-section-title">🏫 דרכי פעולה ברמת בית הספר</div>
+            <div class="grid-container">
+                <div class="info-card"><h4>מנהיגות פדגוגית</h4><ul class="bullet-list"><li>מינוי רכז/ת פדגוגי/ת להובלת השינוי</li><li>הקמת צוות מוביל בית ספרי</li><li>מהלכי פיתוח פנים בית ספריים</li></ul></div>
+                <div class="info-card"><h4>הובלת שינוי בית ספרי</h4><ul class="bullet-list"><li>גיבוש פרקטיקות בית ספריות למיומנויות</li><li>שילוב למידה במרחבים שונים: בכיתה, חוץ כיתתי ובקהילה</li><li>סביבה טכנולוגית</li><li>כלי תכנון רפלקטיבי מבוסס נתונים</li></ul></div>
+                <div class="info-card"><h4>פיתוח מקצועי והדרכה</h4><ul class="bullet-list"><li>השתלמות מוסדית</li><li>הדרכה שוטפת בבית הספר ע"י מדריכות ובאמצעות כלי AI</li></ul></div>
+                <div class="info-card"><h4>הכלה ושיתוף קהילה</h4><ul class="bullet-list"><li>שיתוף ההורים והנהגת הורים בתהליכי השינוי</li><li>טיפוח אקלים תומך הוגנות (אמון, שקיפות, מגוון, נגישות, גמישות, אכפתיות, איכות)</li></ul></div>
+            </div>
+
+            <div class="sub-section-title">🗓️ מערכת שעות – יסודי עכשווי</div>
+            <div class="schedule-table-container">
+                <table class="schedule-table">
+                    <thead>
+                        <tr><th></th><th>א'</th><th>ב'</th><th>ג'</th><th>ד'</th><th>ה'</th><th>ו'</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td class="time-slot">1</td><td>מפגש בוקר</td><td>מפגש בוקר</td><td>חקר</td><td>מפגש בוקר</td><td>גיאומטריה</td><td>אנגלית</td></tr>
+                        <tr><td class="time-slot">2</td><td>מתמטיקה</td><td>למידה עצמית/הקניה בקבוצה קטנה-מתמטיקה</td><td>חקר-מעבדה</td><td>קומיקס שפת / הדימיון (בחירה)</td><td>מתמטיקה</td><td>למידה עצמית/הקנייה בקבוצה קטנה-מתמטיקה</td></tr>
+                        <tr><td class="time-slot">3</td><td>משחקי מתמטיקה (כיתתי/חוץ כיתתי)</td><td>פרויקט קהילתי-יציאה לבוסתן</td><td>מיומנויות פרוייקט</td><td>אנגלית</td><td>אוריינות דיגיטלית</td><td>למידה עצמית/הקנייה בקבוצות קטנות</td></tr>
+                        <tr><td class="time-slot">4</td><td>למידה עצמית/הקנייה בקבוצה קטנה-שפה</td><td>פרויקט קהילתי-יציאה לבוסתן</td><td>מיומנויות פרוייקט</td><td>משחקי אנגלית (כיתתי/חוץ כיתתי)</td><td>חנ"ג</td><td>סיכום שבוע</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            document.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(button => button.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            const activeButton = Array.from(document.querySelectorAll('.nav-btn')).find(btn => btn.getAttribute('onclick') === `showSection('${sectionId}')`);
+            if (activeButton) activeButton.classList.add('active');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תפיסת "יסודי עכשווי" - המודל הלוגי</title>
+    <style>
+        :root {
+            --main-bg-start: #f5f7fa;
+            --main-bg-end: #c3cfe2;
+            --text-dark: #2c3e50;
+            --text-medium: #34495e;
+            --text-light: #7f8c8d;
+            --accent-color: #a8b8d8;
+            --accent-color-dark: #85929e;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --green-frame: #7ab87f;
+            --blue-frame: #5d9cec;
+            --purple-frame: #b8a9dc;
+            --orange-frame: #ffab73;
+            --red-frame: #ff7675;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--main-bg-start) 0%, var(--main-bg-end) 100%);
+            color: var(--text-dark);
+            min-height: 100vh;
+            direction: rtl;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .header .main-title {
+            font-size: 2.5em;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header .subtitle {
+            color: var(--text-light);
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: var(--card-bg);
+            border: none;
+            padding: 15px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--text-medium);
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background: var(--accent-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 18px rgba(168, 184, 216, 0.4);
+        }
+
+        .content-section {
+            display: none;
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.6s ease-in;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-title {
+            font-size: 2.4em;
+            color: var(--text-dark);
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 100px;
+            height: 4px;
+            background: var(--accent-color);
+            margin: 15px auto;
+            border-radius: 2px;
+        }
+
+        .sub-section-title {
+            text-align: center;
+            font-size: 1.8em;
+            color: var(--text-medium);
+            margin-top: 50px;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .sub-section-title::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 3px;
+            background-color: var(--purple-frame);
+            margin: 10px auto 0;
+        }
+        
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .info-card {
+            background: #ffffff;
+            border-right: 5px solid var(--accent-color);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.07);
+        }
+
+        .info-card h4 {
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            color: var(--accent-color-dark);
+        }
+
+        .bullet-list { list-style: none; padding: 0; }
+        .bullet-list li {
+            padding: 10px 15px 10px 0;
+            margin-bottom: 8px;
+            background: rgba(168, 184, 216, 0.1);
+            border-radius: 5px;
+            position: relative;
+            padding-right: 30px;
+        }
+        .bullet-list li::before {
+            content: '✓';
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        /* --- LOGICAL MODEL FLOW STYLES --- */
+        .logical-model-flow {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: stretch; /* Make cards same height */
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .model-stage {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            flex: 1;
+            min-width: 280px;
+            display: flex;
+            flex-direction: column;
+            border-top: 5px solid;
+            transition: all 0.3s ease;
+        }
+        .model-stage:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+        }
+
+        .model-stage h4 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            text-align: center;
+            color: var(--text-dark);
+        }
+        .model-stage .bullet-list { margin-top: auto; } /* Push list to bottom */
+        
+        .model-stage.inputs { border-color: var(--blue-frame); }
+        .model-stage.activities { border-color: var(--green-frame); }
+        .model-stage.outputs { border-color: var(--purple-frame); }
+        .model-stage.outcomes { border-color: var(--orange-frame); }
+
+        .model-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+            color: var(--accent-color-dark);
+            padding: 0 10px;
+        }
+        @media (max-width: 1250px) {
+            .model-arrow {
+                width: 100%;
+                transform: rotate(90deg);
+                margin: -10px 0;
+            }
+        }
+        /* --- END OF LOGICAL MODEL FLOW STYLES --- */
+
+        .timeline-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .timeline-card {
+            background: linear-gradient(135deg, #e0c3fc, #8ec5fc);
+            color: var(--text-dark);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .timeline-card h4 { font-size: 1.6em; margin-bottom: 15px; text-align: center; }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="main-title">תפיסת "יסודי עכשווי"</div>
+        <div class="subtitle">מודל לוגי להטמעת המהלך | תכנית תלת-שנתית 2025-2028</div>
+    </div>
+
+    <div class="container">
+        <div class="navigation">
+            <button class="nav-btn active" onclick="showSection('logical-model')">המודל הלוגי להטמעה</button>
+            <button class="nav-btn" onclick="showSection('model-in-action')">המודל בפעולה: רמות היישום</button>
+        </div>
+
+        <!-- The Logical Model Section -->
+        <div id="logical-model" class="content-section active">
+            <h2 class="section-title">המודל הלוגי להטמעת תפיסת "יסודי עכשווי"</h2>
+            
+            <div class="grid-container">
+                <div class="info-card">
+                    <h4>💡 הרקע המחייב שינוי</h4>
+                    <ul class="bullet-list">
+                        <li><b>מציאות VUCA:</b> עולם תנודתי, לא צפוי, מורכב ועמום.</li>
+                        <li><b>שינויים גלובליים:</b> בינה מלאכותית, קיטוב חברתי, גיוון תרבותי.</li>
+                        <li><b>אירועים משבריים:</b> צורך בחוסן ומיומנויות התנהלות במציאות משתנה.</li>
+                        <li><b>פערים במערכת:</b> יוזמות נקודתיות ופערים בהישגים לימודיים.</li>
+                    </ul>
+                </div>
+                <div class="info-card">
+                    <h4>🎯 מטרת העל</h4>
+                    <ul class="bullet-list">
+                        <li>התאמת החינוך היסודי למציאות המשתנה.</li>
+                        <li>הכשרת התלמידים להתמודדות עם אתגרי ההווה והעתיד.</li>
+                        <li>יצירת מסגרת הוליסטית: תפיסה, מנגנונים, תשתיות ואסדרה.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="sub-section-title">⚙️ תיאוריית השינוי</div>
+            <div class="logical-model-flow">
+                <div class="model-stage inputs">
+                    <h4>1. תשומות</h4>
+                    <ul class="bullet-list">
+                        <li><b>אנוש:</b> מדריכות, רכזים, צוותי מו"פ, מפקחים, מנהלים.</li>
+                        <li><b>כלכליים:</b> תקצוב דיפרנציאלי, שעות פיתוח מקצועי, כלים טכנולוגיים.</li>
+                        <li><b>תשתיות:</b> מרכזי פסג"ה, כלי הערכה ומעקב, פלטפורמות AI.</li>
+                    </ul>
+                </div>
+                <div class="model-arrow">←</div>
+                <div class="model-stage activities">
+                    <h4>2. פעילויות</h4>
+                    <ul class="bullet-list">
+                        <li><b>מטה:</b> פיתוח מקצועי, אסדרות (זמן מורה), שותפויות, כלי מדידה.</li>
+                        <li><b>ביה"ס:</b> מנהיגות פדגוגית, הובלת שינוי, למידה במרחבים מגוונים, שיתוף קהילה.</li>
+                    </ul>
+                </div>
+                <div class="model-arrow">←</div>
+                <div class="model-stage outputs">
+                    <h4>3. תפוקות</h4>
+                    <ul class="bullet-list">
+                        <li>150 בתי ספר מיישמים.</li>
+                        <li>150 רכזים פדגוגיים מוכשרים.</li>
+                        <li>מסמך מדיניות ו"תו תקן" פעילים.</li>
+                        <li>רשת קהילתית של בתי ספר.</li>
+                        <li>כלי הערכה חדשניים בשימוש.</li>
+                    </ul>
+                </div>
+                <div class="model-arrow">←</div>
+                <div class="model-stage outcomes">
+                    <h4>4. תוצאות</h4>
+                    <ul class="bullet-list">
+                        <li><b>קצר:</b> עלייה במוטיבציה, מורים מפתחים פרקטיקות.</li>
+                        <li><b>בינוני:</b> שיפור ב-Agency ו-Co-Agency, מיומנויות חברתיות.</li>
+                        <li><b>ארוך:</b> שיפור ב-PISA/PIRLS, צמצום פערים, בוגרים מוכנים לעתיד.</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="sub-section-title">🌍 גורמים חיצוניים ומערכת מדידה</div>
+            <div class="grid-container">
+                <div class="info-card">
+                    <h4>👍 גורמים תומכים / 👎 מעכבים</h4>
+                    <ul class="bullet-list">
+                        <li><b>תומך:</b> מדיניות חדשנות, תמיכת הנהגה, שותפויות.</li>
+                        <li><b>מעכב:</b> התנגדות לשינוי, אילוצי תקציב, עומס על מורים.</li>
+                    </ul>
+                </div>
+                <div class="info-card">
+                    <h4>📊 מערכת מדידה ומעקב</h4>
+                    <ul class="bullet-list">
+                        <li><b>פנימיים:</b> מדדי Agency ו-Co-Agency, כלי הערכת הוגנות, שאלוני מיומנויות (ראמ"ה).</li>
+                        <li><b>חיצוניים:</b> מבחני PISA/PIRLS, סקרי שביעות רצון.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="sub-section-title">🗓️ תכנית יישום תלת-שנתית</div>
+            <div class="timeline-grid">
+                <div class="timeline-card">
+                    <h4>שנה א' (תשפ"ו) - השקה</h4>
+                    <ul class="bullet-list">
+                        <li>50 בתי ספר לפיילוט</li>
+                        <li>הכשרת 14 מדריכות ארציות</li>
+                        <li>פיתוח כלי הערכה רפלקטיבי</li>
+                    </ul>
+                </div>
+                <div class="timeline-card">
+                    <h4>שנה ב' (תשפ"ז) - הרחבה</h4>
+                    <ul class="bullet-list">
+                        <li>50 בתי ספר נוספים</li>
+                        <li>פיתוח "תו תקן יסודי עכשווי"</li>
+                        <li>אסדרת "זמן מורה"</li>
+                    </ul>
+                </div>
+                <div class="timeline-card">
+                    <h4>שנה ג' (תשפ"ח) - הטמעה</h4>
+                    <ul class="bullet-list">
+                        <li>הרחבה דרך מערכת גפ"ן</li>
+                        <li>יישום הערכה חדשנית</li>
+                        <li>הטמעה בשגרה הבית ספרית</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- The Model in Action Section -->
+        <div id="model-in-action" class="content-section">
+            <h2 class="section-title">המודל בפעולה: מערכת הוליסטית</h2>
+            <p style="text-align:center; font-size: 1.2em; max-width: 800px; margin: -20px auto 40px;">התפיסה פועלת במקביל בכל רמות המערכת, מהתלמיד הבודד ועד לקהילה כולה, כאשר כל רמה משפיעה ומושפעת מהאחרות.</p>
+            
+            <div class="sub-section-title">👨‍🎓 רמת התלמיד - פעלן עצמאי ושיתופי</div>
+            <div class="grid-container">
+                <div class="info-card"><h4>תלמיד כפעלן (Agency)</h4><ul class="bullet-list"><li>מתכנן ומבצע פרויקטים אישיים</li><li>מציב יעדים אישיים ומנהל התקדמות</li><li>מוביל יוזמות חברתיות בקהילה</li><li>מפתח חשיבה ביקורתית ולמידה עצמאית</li></ul></div>
+                <div class="info-card"><h4>למידה מותאמת אישית</h4><ul class="bullet-list"><li>עוקב אחר מסלול התקדמות אישי</li><li>בוחר בין מרחבי למידה ודרכי ביטוי</li><li>שותף בבניית תכניתו האישית</li></ul></div>
+            </div>
+
+            <div class="sub-section-title">👩‍🏫 רמת המורה - מנטור ומנחה</div>
+            <div class="grid-container">
+                <div class="info-card"><h4>מורה כמנטור</h4><ul class="bullet-list"><li>מקיים מפגשי חונכות אישיים</li><li>מתאים שיטות הוראה לצרכים שונים</li><li>מנהל קהילות למידה מקצועיות</li><li>משתתף בהנהלה משתפת</li></ul></div>
+                <div class="info-card"><h4>גיוון פדגוגי</h4><ul class="bullet-list"><li>משלב שיטות הוראה מגוונות (חקר, פרויקטים)</li><li>מפעיל הרכבי לומדים שונים</li><li>מנהל מרחבי למידה מגוונים</li><li>יוצר דרכי הערכה מגוונות</li></ul></div>
+            </div>
+
+            <div class="sub-section-title">🏫 רמת בית הספר - ארגון גמיש ומעצים</div>
+            <div class="grid-container">
+                <div class="info-card"><h4>מבנה ארגוני גמיש</h4><ul class="bullet-list"><li>מרחבי חקר ויצירה (Makerspace)</li><li>גמישות פדגוגית בהתאמת תוכנית הלימודים</li><li>מדיניות "דלת פתוחה" ליוזמות</li><li>תקצוב דיפרנציאלי תומך הוגנות</li></ul></div>
+                <div class="info-card"><h4>תרבות ארגונית מעצימה</h4><ul class="bullet-list"><li>אקלים של אמון, שיתוף וחדשנות</li><li>זמן מובנה לפיתוח מקצועי</li><li>תמיכה מקצועית מתמשכת לצוות</li><li>הכלה לכישלונות כחלק מלמידה</li></ul></div>
+            </div>
+
+            <div class="sub-section-title">🏘️ רמת הקהילה - שותפות פעילה</div>
+            <div class="grid-container">
+                <div class="info-card"><h4>חיבור פעיל לקהילה</h4><ul class="bullet-list"><li>פרויקטים קהילתיים (גינה, שוק)</li><li>שיתופי פעולה עם מוסדות מקומיים</li><li>למידת שירות בארגונים מקומיים</li><li>סיורים לימודיים בעסקים בקהילה</li></ul></div>
+                <div class="info-card"><h4>מעורבות הורים ורשתות תמיכה</h4><ul class="bullet-list"><li>הורים שותפים בהנהלה ובניית תכניות</li><li>רשתות הורים תומכות יוזמות</li><li>אקוסיסטם הוגן הממצה משאבים קהילתיים</li><li>תמיכה במגוון אוכלוסיות וזהויות</li></ul></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-btn').forEach(button => {
+                button.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+            const activeButton = Array.from(document.querySelectorAll('.nav-btn')).find(btn => btn.getAttribute('onclick') === `showSection('${sectionId}')`);
+            if (activeButton) {
+                activeButton.classList.add('active');
+            }
+        }
+        document.querySelectorAll('.nav-btn').forEach(button => {
+            button.addEventListener('click', (event) => {
+                const sectionId = event.target.getAttribute('onclick').match(/'([^']+)'/)[1];
+                showSection(sectionId);
+            });
+        });
+    </script>
+</body>
+</html>
